@@ -1,0 +1,239 @@
+---
+title: "calendar_df"
+author: "KarinaJonina"
+date: "5/1/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Student Information
+- Student Name:   Karina Jonina
+- Student Code:   c00278440
+- Module Title:   Data Visualisation and Insight
+- Module Code:    DATAC5202
+- Module Leader:  Agnes Maciocha
+- Course Name:    Master of Science in Data Science
+- Course Code:    CW_KCDAR_M
+- Due Date:       5th January 2022
+
+## Pupose of this code:
+There are 9 million rows of data, which made it very difficult to rerun and test the code. My personal computer has 8GB of RAM and found it difficult to handle this amount of rows. Therefore, it was decided to create new dataset to summarise what is necessary from the dataset, so that the number of rows was reduced and the computer would not have so much difficulty with the rows.  
+
+Two Rmd files were submitted, one analysing AirBnB data, the other treating and extracting important information from 'calendar.csv'. 
+
+THIS RMD FILE TREATS CALENDAR.CSV
+
+## Files submitted
+- listings.csv - AirBnB Listings in Ireland from the beginning of AirBnB operating in Ireland
+- calendar.csv - AirBnB Listings from 23rd October 2021 to 21st October 2021 (dates not chosen by student, supplied by AirBnB), contains 9 million rows.
+- homeless_September_2021.csv - Homeless Report, which is published every month by the Irish government, captures statistics about homelessness (Department of Housing, Local Government and Heritage, 2021). The csv was manually created from this report. 
+- rent_pressure_zones.csv -Rent Pressure Zones (RPZs) were developed by the Irish government to tackle rising rents lack of affordable rental units. These are areas located in parts of the country where rents are the highest and rising, and where households have the greatest difficulty finding affordable accommodation (Residential Tenancies Board, 2021). The csv was manually created from RTB website. 
+- rent_in_ireland.csv - The website daft.ie is the leading property website in Ireland, which publishes reports on the Irish housing market every quarter. For this next dataset, the report Q2 2021 was used to find out the rent in each city and county in Ireland (Lyons, 2021). The csv was manually created from the report. 
+- Karina.Jonina.Project.html - Document presents Karina.Jonina.Project.Rmd in HTML
+
+Due to the 9 million rows in calendar.csv, it was decided to treat this dataset outside of this analysis due to the size of it. 
+
+- calendar_df.Rmd - Code to treat calendar.csv and create the two datasets below to analyse in this report
+- summarise_df.csv - A new dataset from calendar.csv  was created, where listings were examined by availability for each month within a year (23rd October 2021 to 21st October 2022).
+- available_nights_df.csv - A new dataset summarising the number of available nights for each listing in a year (23rd October 2021 to 21st October 2022).
+- calendar_df.html - Document presents calendar_df.Rmd in HTML
+
+**Presentation** 
+
+- Karina.Jonina.Project.Presentation.Rmd - Rmd file for presentation
+- Karina.Jonina.Project.Presentation.html - Document presents Karina.Jonina.Project.Presentation.Rmd - Rmd in HTML for presentation due on the 12th January 2022. 
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+if (!require("stringr")) install.packages("stringr")
+if (!require("dplyr")) install.packages("dplyr")
+library(stringr)
+library(dplyr)
+```
+
+## Dataset 'calendar_df'
+To examine next year's availability, the 'calendar.csv' for Ireland was downloaded from the AirBnB website. It was downloaded from http://insideairbnb.com/get-the-data.html (calendar.csv).  This dataset is between 23rd October 2021 to 21st October 2022. This dataset states whether the AirBnB listing is available on a specific date.
+
+Data Dictionary was summarised from https://docs.google.com/spreadsheets/d/1iWCNJcSutYqpULSQHlNyGInUvHg2BoUGoNRIGa6Szc4/edit#gid=982310896
+
+```{r echo=FALSE, warning=FALSE}
+# reading the csv
+calendar_df =  read.csv('calendar.csv')
+```
+
+In 'calendar_df' dataset, there are `r nrow(calendar_df)` rows and `r ncol(calendar_df)` columns in the dataset.
+Columns names are  `r colnames(calendar_df)`.
+```{r echo=FALSE, warning=FALSE}
+#check the class of calendar_df
+class(calendar_df)
+```
+
+```{r echo=FALSE, warning=FALSE}
+#check the column names for  calendar_df
+colnames(calendar_df)
+```
+
+```{r echo=FALSE, warning=FALSE}
+# examining the structure in calendar_df
+str(calendar_df)
+```
+
+```{r echo=FALSE, warning=FALSE}
+# examining the top 5 rows in calendar_df
+head(calendar_df)
+```
+
+```{r echo=FALSE, warning=FALSE}
+# examining summary of all numeric columns in calendar_df
+summary(calendar_df)
+```
+
+#### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| listing_id | integer | AirBnB's unique identifier for the listing |
+| date | date | Each Date of 365 days |
+| available | text | 't' means 'TRUE' and 'f' means 'FALSE' for that specific date |
+| price | integer | Daily price in local currency |
+| adjusted_price | integer | Daily price in local currency |
+| minimum_nights | integer | Minimum nights for each AirBnB Listing |
+| maximum_nights | integer | Maximum nights for each AirBnB Listing |
+
+```{r echo=FALSE}
+# examining the column type
+str(calendar_df)
+```
+
+## Data Treatment
+Column 'date' was changed to datetime type. A new column was created to extract the month of the dataset.
+
+```{r echo=FALSE}
+# converting to datetime object
+calendar_df[['date']] <- as.POSIXct(calendar_df[['date']],format = "%Y-%m-%d")
+```
+
+```{r echo=FALSE}
+str(calendar_df)
+```
+
+```{r echo=FALSE}
+# extracting month from the date
+calendar_df[['month']] <- format(calendar_df[['date']],format = "%B")
+```
+
+```{r echo=FALSE, warning=FALSE}
+# e3xamining unique months in the dataset
+unique(calendar_df$month)
+```
+
+```{r  echo=FALSE}
+head(calendar_df)
+```
+
+```{r echo=FALSE, warning=FALSE}
+# changing 'month' to factor
+calendar_df$mmonth <- as.factor(calendar_df$month)
+
+# changing  the order of factors
+calendar_df$month <- factor(calendar_df$month, levels = c("January", "February", "March","April", "May", "June","July", "August", "September","October", "November", "December"))
+```
+
+```{r  echo=FALSE}
+#removing '$'
+calendar_df$price <- substring(calendar_df$price, 2)
+#removing '.00'
+calendar_df$price <- str_sub(calendar_df$price, end = -4)
+
+#removing '$'
+calendar_df$adjusted_price <- substring(calendar_df$adjusted_price, 2)
+#removing '.00'
+calendar_df$adjusted_price <- str_sub(calendar_df$adjusted_price, end=- 4)
+```
+
+
+```{r  echo=FALSE}
+# changing column to integer
+calendar_df$price <- strtoi(calendar_df$price)
+# changing column to integer
+calendar_df$adjusted_price <- strtoi(calendar_df$adjusted_pric)
+```
+
+```{r echo=FALSE}
+str(calendar_df)
+```
+
+## Dataset 'summarise_df'
+A new dataset was created, where listings were examined by availability for each month within a year (23rd October 2021 to 21st October 2022).
+```{r echo=FALSE}
+summarise_df <- calendar_df %>% 
+  select(listing_id, month, available, price) %>% 
+  filter(available=='t') %>% 
+  group_by(listing_id, month) %>% 
+  summarise(count=n(),
+            min_price = min(price),
+            mean_price = mean(price),
+            max_price = max(price))
+```
+
+```{r echo=FALSE, warning=FALSE}
+head(summarise_df)
+```
+
+#### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| listing_id | integer | AirBnB's unique identifier for the listing |
+| month | date | Month of the year |
+| count | integer | Number of nights available in that month |
+| min_price | integer | Minimum price for that listing in that month |
+| mean_price | integer | Mean price for that listing in that month |
+| max_price | integer | Maximum price for that listing in that month |
+
+## Saving the summarise_df as csv file
+
+```{r echo=FALSE, warning=FALSE}
+write.csv(summarise_df,"summarise_df.csv", row.names = TRUE)  
+```
+
+In 'summarise_df' dataset, there are `r nrow(summarise_df)` rows and `r ncol(summarise_df)` columns in the dataset.
+Columns names are `r colnames(summarise_df)`.
+
+## Dataset 'available_nights_df
+A new dataset summarising the number of available nights for each listing in a year (23rd October 2021 to 21st October 2022).
+
+```{r echo=FALSE, warning=FALSE}
+# Examining availability for each host
+calendar_df %>% 
+  select(listing_id, available) %>%
+  filter(available == 't') %>% 
+  group_by(listing_id) %>% 
+  summarise(available_nights=n())
+
+```
+
+```{r echo=FALSE}
+# creating a new dataframe of the table above
+available_nights_df <-  calendar_df %>% 
+  select(listing_id, available) %>%
+  filter(available == 't') %>% 
+  group_by(listing_id) %>% 
+  summarise(available_nights=n())
+
+```
+
+#### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| listing_id | integer | AirBnB's unique identifier for the listing |
+| available_nights | integer | Number of nights avaible during the year |
+
+## Saving the available_nights_df as csv file
+
+```{r echo=FALSE, warning=FALSE}
+write.csv(available_nights_df,"available_nights_df.csv", row.names = TRUE)  
+```
+
+In 'available_nights_df' dataset, there are `r nrow(available_nights_df)` rows and `r ncol(available_nights_df)` columns in the dataset.
+Columns names are `r colnames(available_nights_df)`.
