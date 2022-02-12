@@ -1,5 +1,7 @@
 # Impact of AirBnB on Housing Crisis
-After completing and submitting my assignment for Data Visualisation, I decided to revise my storytelling (mainly throw out a tonne of graphs that are not important to story telling but are still available for exploration) and use updated datasets from AirBnB (updated the 5th December).
+After completing and submitting my assignment for Data Visualisation, I decided to revise my storytelling (mainly throwing out a tonne of graphs that are not important to story but are still available for exploration) and use updated datasets from AirBnB (updated the 29th December 2021).
+
+This data is licensed under a Creative Commons Attribution 4.0 International License.
 
 ## Introduction
 The aim of this project is tell a story about AirBnB listings through graphs in plotly package and dplyr packages in R.
@@ -79,7 +81,7 @@ It is clear from this graph that there are some parts of Ireland that have more 
 ### Rent Pressure Zones
 ![Picture4](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture4.png) 
 
-Map of Ireland represents the density of AirBnB listings, highlighting the areas that are in RTZs (in red). Athough Dublin City, Cork City and Galway City are all in RTZs, it is possible to see the huge amount of AirBnB listings available, which can be affecting the Irish Housing Crisis.
+Map of Irelandpresents the density of AirBnB listings, highlighting the areas that are in RTZs (in red). Athough Dublin City, Cork City and Galway City are all in RTZs, it is possible to see the huge amount of AirBnB listings available, which can be affecting the Irish Housing Crisis.
 
 | Room Type | RPZ Status | No of Listings | 
 | :- | :- | :- |
@@ -97,6 +99,45 @@ Table above is summarised with this graph. There are more entire rental units an
 ![Picture6](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture6.png) 
 
 Although, there is a difference between entire rental unit and private/shared room on price, there is no big difference between renting private/shared room inside or outside the RTZ. However, an entire rental unit is slightly more expensive in RTZs than outside RTZs.
+
+
+### Entire Rental Units
+A new dataset was created where AirBnB listings were selected that offered entire rental unit. This new dataset was used for this section of the report.
+
+![Picture7](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture7.png) 
+Kerry and Donegal have more entire rental units than other counties. Dublin is only 5th highest, while Cork and Galway are in 3rd and 4th place.
+
+![Picture7_1](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture7_1.png) 
+: When Kerry was examined, 314 AirBnB listings are in the RTZ, while the rest is outside the RTZ. Both County Galway and County Cork have AirBnB listings in RTZ and outside of it. All Dublin City AirBnBlistings, Cork City AirBnB listings and Galway City AirBnB listings is in the RTZ.
+
+![Picture8](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture8.png) 
+It is visible that a lot of properties are not available all year around. Unfortunately, no reason is provided why the property is unavailable.
+
+![Picture9](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture9.png) 
+The table above the shows the breakdown of which entire rental units should be rented out or leased out as AirBnB, when only the daily price and daily rent rate is to be considered.
+
+![Picture10](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture10.png) 
+However, when comparing total potential income (available nights by price) and annual income (rent_in_ireland.csv by 12), it seems that most landlords are missing out on the potential annual rent. THis could be due to the fact that the rental unit is not available all year around.
+
+##### Planning Permission
+![Picture11](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture11.png) 
+There are very small amount of properties in the Rent Pressures Zones that are over 90 day threshold that would require planning permission.
+
+| RPZ Status | RPZ Status | Planning Permission | 
+| :- | :- | :- |
+| Non-RPZ | over-90 | Not Required | 
+| Non-RPZ | under-90 | Not Required |	
+| RPZ | over-90 | Planning Required |	
+| RPZ |under-90 | Not Required |
+
+Homeowners in RTZs are required to apply for planning permission if they let out their entire home (principal private residence) for short-term lets of more than 90 days in total while they are away. Principal private residence is the place where one ordinarily live.
+There are 2350 properties in the Rent Pressures Zones that are over 90 day threshold that would require planning permission.
+
+### Private Rooms
+TBC
+
+
+
 
 ## Reference
 Burke, C. (2021) Rents continue to rise across Ireland as number of rental homes available hits ‘all-time low’, TheJournal.ie. Available at: https://www.thejournal.ie/daft-rental-report-all-time-low-5596453-Nov2021/ (Accessed: 17 December 2021).
