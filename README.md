@@ -62,7 +62,7 @@ Creating new variables:
 - Threshold: under-90 and over-90 days lease
 - Planning permission: Required and Not Required
 - Student Accommodation: True or False
-- Rent or AirBnB: compares (available_nights ny price) and (rent_per_month by 12)
+- Rent or AirBnB: compares (available_nights by price) and (rent_per_month by 12)
 
 ## Data Visualisation
 
@@ -76,7 +76,30 @@ Creating new variables:
 ### Rent Pressure Zones
 ![Picture4](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture4.png) 
 
+| Room Type | RPZ Status | No of Listings | 
+| :- | :- | :- |
+| Entire rental unit | Non-RPZ | 8020 |
+| Entire rental unit | RPZ | 3418 |
+| Private room | Non-RPZ | 2967 |
+| Private room | RPZ | 2855 |
+
 ![Picture5](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture5.png) 
 
 ![Picture6](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture6.png) 
 
+## Reference
+Burke, C. (2021) Rents continue to rise across Ireland as number of rental homes available hits ‘all-time low’, TheJournal.ie. Available at: https://www.thejournal.ie/daft-rental-report-all-time-low-5596453-Nov2021/ (Accessed: 17 December 2021).
+
+Burke-Kennedy, E. (2021) Airbnb exodus increases stock of rental property in Dublin by 90%, The Irish Times. Available at: https://www.irishtimes.com/business/economy/airbnb-exodus-increases-stock-of-rental-property-in-dublin-by-90-1.4654155 (Accessed: 17 December 2021).
+
+Citizensinformation.ie (no date) Renting your property for short-term lets. Citizensinformation.ie. Available at: https://www.citizensinformation.ie/en/housing/owning_a_home/home_owners/renting_your_property_for_shortterm_lets.html (Accessed: 17 December 2021).
+
+Department of Housing, Local Government and Heritage (2021) Homeless Report - September 2021. Available at: https://www.gov.ie/en/publication/0d7a7-homeless-report-september-2021/ (Accessed: 19 December 2021).
+
+Lyons, R. (2021) Irish Rental Report Q2 2021. Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 17 December 2021).
+
+McGrath, D. (2021) Number of homeless people in Ireland rises for third month in a row – 8,212 adults and children now without home, Independent. Available at: https://www.independent.ie/irish-news/number-of-homeless-people-in-ireland-rises-for-third-month-in-a-row-8212-adults-and-children-now-without-home-40885752.html (Accessed: 19 December 2021).
+
+Pope, C. (2021) New restrictions likely to reduce supply of short-term rental property, The Irish Times. Available at: https://www.irishtimes.com/business/new-restrictions-likely-to-reduce-supply-of-short-term-rental-property-1.4653404 (Accessed: 17 December 2021).
+
+Residential Tenancies Board (2021) What are Rent Pressure Zones (RPZ)? Available at: https://www.rtb.ie/during-a-tenancy/rent-review-in-a-rent-pressure-zone-rpz?gclid=Cj0KCQiAzfuNBhCGARIsAD1nu-8YhjJPsVbhgWjuM0et4lZX2ansT4b4XkLEEx9G63vDiVsptSzv8toaAkdDEALw_wcB (Accessed: 19 December 2021).
