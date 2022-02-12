@@ -137,7 +137,7 @@ However, when comparing total potential income (available nights by price) and a
 
 There are very small amount of properties in the Rent Pressures Zones that are over 90 day threshold that would require planning permission.
 
-| RPZ Status | RPZ Status | Planning Permission | 
+| RPZ Status | RPZ Status | Planning Permission | No of Listings |
 | :- | :- | :- |
 | Non-RPZ | over-90 | Not Required |  6799 |
 | Non-RPZ | under-90 | Not Required | 1221 |
