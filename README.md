@@ -139,10 +139,10 @@ There are very small amount of properties in the Rent Pressures Zones that are o
 
 | RPZ Status | RPZ Status | Planning Permission | 
 | :- | :- | :- |
-| Non-RPZ | over-90 | Not Required | 
-| Non-RPZ | under-90 | Not Required |	
-| RPZ | over-90 | Planning Required |	
-| RPZ |under-90 | Not Required |
+| Non-RPZ | over-90 | Not Required |  6799 |
+| Non-RPZ | under-90 | Not Required | 1221 |
+| RPZ | over-90 | Planning Required | 2350 |
+| RPZ | under-90 | Not Required | 1068 |
 
 Homeowners in RTZs are required to apply for planning permission if they let out their entire home (principal private residence) for short-term lets of more than 90 days in total while they are away. Principal private residence is the place where one ordinarily live.
 There are 2350 properties in the Rent Pressures Zones that are over 90 day threshold that would require planning permission.
