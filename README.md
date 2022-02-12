@@ -112,19 +112,27 @@ Kerry and Donegal have more entire rental units than other counties. Dublin is o
 
 When Kerry was examined, 314 AirBnB listings are in the RTZ, while the rest is outside the RTZ. Both County Galway and County Cork have AirBnB listings in RTZ and outside of it. All Dublin City AirBnBlistings, Cork City AirBnB listings and Galway City AirBnB listings is in the RTZ.
 
+#### Availability
+
 ![Picture8](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture8.png) 
 
 It is visible that a lot of properties are not available all year around. Unfortunately, no reason is provided why the property is unavailable.
 
+#### Profitable: AirBnB or Rent
+
+##### Per Day
+
 ![Picture9](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture9.png) 
 
-The table above the shows the breakdown of which entire rental units should be rented out or leased out as AirBnB, when only the daily price and daily rent rate is to be considered.
+When comparing daily rent rate and daily AirBnB, for most properties, it is more profitable to AirBnB.
+The graph above the shows the breakdown of which entire rental units should be rented out or leased out as AirBnB, when only the daily price and daily rent rate is to be considered.
 
+##### Per Year
 ![Picture10](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture10.png)  
 
 However, when comparing total potential income (available nights by price) and annual income (rent_in_ireland.csv by 12), it seems that most landlords are missing out on the potential annual rent. THis could be due to the fact that the rental unit is not available all year around.
 
-##### Planning Permission
+#### Planning Permission
 ![Picture11](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture11.png) 
 
 There are very small amount of properties in the Rent Pressures Zones that are over 90 day threshold that would require planning permission.
