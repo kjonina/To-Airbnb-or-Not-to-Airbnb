@@ -104,23 +104,29 @@ Although, there is a difference between entire rental unit and private/shared ro
 ### Entire Rental Units
 A new dataset was created where AirBnB listings were selected that offered entire rental unit. This new dataset was used for this section of the report.
 
-![Picture7](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture7.png) 
+![Picture7](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture7.png)  
+
 Kerry and Donegal have more entire rental units than other counties. Dublin is only 5th highest, while Cork and Galway are in 3rd and 4th place.
 
-![Picture7_1](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture7_1.png) 
-: When Kerry was examined, 314 AirBnB listings are in the RTZ, while the rest is outside the RTZ. Both County Galway and County Cork have AirBnB listings in RTZ and outside of it. All Dublin City AirBnBlistings, Cork City AirBnB listings and Galway City AirBnB listings is in the RTZ.
+![Picture7_1](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture7_1.png)  
+
+When Kerry was examined, 314 AirBnB listings are in the RTZ, while the rest is outside the RTZ. Both County Galway and County Cork have AirBnB listings in RTZ and outside of it. All Dublin City AirBnBlistings, Cork City AirBnB listings and Galway City AirBnB listings is in the RTZ.
 
 ![Picture8](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture8.png) 
+
 It is visible that a lot of properties are not available all year around. Unfortunately, no reason is provided why the property is unavailable.
 
 ![Picture9](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture9.png) 
+
 The table above the shows the breakdown of which entire rental units should be rented out or leased out as AirBnB, when only the daily price and daily rent rate is to be considered.
 
-![Picture10](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture10.png) 
+![Picture10](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture10.png)  
+
 However, when comparing total potential income (available nights by price) and annual income (rent_in_ireland.csv by 12), it seems that most landlords are missing out on the potential annual rent. THis could be due to the fact that the rental unit is not available all year around.
 
 ##### Planning Permission
 ![Picture11](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture11.png) 
+
 There are very small amount of properties in the Rent Pressures Zones that are over 90 day threshold that would require planning permission.
 
 | RPZ Status | RPZ Status | Planning Permission | 
