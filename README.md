@@ -1,6 +1,5 @@
-# Karina.Jonina.Project
-R Project for Data Visualisation (MSc Module)
-
+# Impact of AirBnB on Housing Crisis
+After completing and submitting my assignment for Data Visualisation, I decided to revise my storytelling (mainly throw out a tonne of graphs that are not important to story telling but are still available for exploration) and use updated datasets from AirBnB (updated the 5th December).
 
 ## Introduction
 The aim of this project is tell a story about AirBnB listings through graphs in plotly package and dplyr packages in R.
@@ -9,7 +8,7 @@ Housing Crisis in Ireland is a hot topic at the moment, which is affecting vast 
 
 In this report, I will be examining the impact of AirBnB on Irish Housing Crisis, by analysing AirBnB listings data by examining the RTZs from Residential Tenancies Board, Irish housing report from Daft.ie and the Homelessness Report from the Irish government.
 
-## Business Understanding
+## Background Understanding
 ### Housing Crisis
 There is a huge housing crisis in Ireland, which has been defined as a shortage of affordable accommodation for renting or buying. Irish government has made attempts to reduce the housing crisis with plans of affordable and social housing, however, lobbyists criticise the government for late intervention and lack of innovative solutions. Both young adults (under 35 years old) and more older adults are worrying about not being able to afford a home because of rent prices and increasing house prices.
 
@@ -27,7 +26,7 @@ AirBnB hosts and AirBnB, itself, have been strongly criticised for the increase 
 
 There have been talks of the Irish government to “bring legislation to create new measures that would target at least some of those properties and may see them return to the long-term rental market. Any moves which curtail the availability of AirBnB in popular tourism destinations around the country are likely to have a knock-on impact on accommodation availability and prices once international tourism resumes in a significant way in the post-pandemic period” (Pope, 2021). At the start of the pandemic, figures from estate agent Sherry FitzGerald show the number of properties available for rent in Dublin rose from 1,593 in November 2019 to 3,039 by the end March 2020 (Burke-Kennedy, 2021).
 
-###  Potential Long-Term Use of Accommodation Type at AirBnB
+### Potential Long-Term Use of Accommodation Type at AirBnB
 
 - Entire Rental Unit – this could be a house or an apartment. For this report, entire rental units will be viewed as a possible long-term accommodation for a family.
 - Private Room – this is a private room in a shared house. This type of accommodation is usually used by students for the academic months of the year or young professionals (all year around).
@@ -69,12 +68,18 @@ Creating new variables:
 ### Overview of AirBnB
 ![Picture1](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture1.png) 
 
+It is clear from this graph that there are some parts of Ireland that have more AirBnB listings than others. It is easy to see that there are more properties available on the coast than inland.
+
 ![Picture2](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture2.png) 
 
-![Picture3](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture3.png) 
+![Picture3](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture3.png)
+
+ Although, there is a difference between entire rental unit and private/shared room on price, there is no big difference between renting private/shared room inside or outside the RTZ. However, an entire rental unit is slightly more expensive in RTZs than outside RTZs. 
 
 ### Rent Pressure Zones
 ![Picture4](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture4.png) 
+
+Map of Ireland represents the density of AirBnB listings, highlighting the areas that are in RTZs (in red). Athough Dublin City, Cork City and Galway City are all in RTZs, it is possible to see the huge amount of AirBnB listings available, which can be affecting the Irish Housing Crisis.
 
 | Room Type | RPZ Status | No of Listings | 
 | :- | :- | :- |
@@ -83,9 +88,15 @@ Creating new variables:
 | Private room | Non-RPZ | 2967 |
 | Private room | RPZ | 2855 |
 
+There are more entire rental units and private rooms available outside of RTZs than there are in the RTZs.
+
 ![Picture5](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture5.png) 
 
+Table above is summarised with this graph. There are more entire rental units and private rooms available outside of RTZs than there are in the RTZs. However, this could be due to fact that there are more houses in general outside the RTZs than inside the RTZs, which would show more AirBnB listings outside RTZs than inside RTZs.
+
 ![Picture6](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture6.png) 
+
+Although, there is a difference between entire rental unit and private/shared room on price, there is no big difference between renting private/shared room inside or outside the RTZ. However, an entire rental unit is slightly more expensive in RTZs than outside RTZs.
 
 ## Reference
 Burke, C. (2021) Rents continue to rise across Ireland as number of rental homes available hits ‘all-time low’, TheJournal.ie. Available at: https://www.thejournal.ie/daft-rental-report-all-time-low-5596453-Nov2021/ (Accessed: 17 December 2021).
