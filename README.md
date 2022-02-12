@@ -67,5 +67,15 @@ Creating new variables:
 ## Data Visualisation
 
 ### Overview of AirBnB
-![Picture1](https://github.com/kjonina/AirBnB_Ireland/blob/main/Graphs/map_of_ROI.png) 
+![Picture1](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture1.png) 
+
+![Picture2](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture2.png) 
+
+![Picture3](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture3.png) 
+
+![Picture4](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture4.png) 
+
+![Picture5](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture5.png) 
+
+![Picture6](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture6.png) 
 
