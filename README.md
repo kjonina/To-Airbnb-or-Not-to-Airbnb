@@ -36,6 +36,7 @@ There have been talks of the Irish government to “bring legislation to create 
 ## Research Question
 - What is the impact of AirBnB on Irish Housing Crisis?
 - Can moving entire rental units and private rooms from AirBnB listings take the pressure of the Irish Housing Crisis?
+
 A lot of thought was brought to decided how to analyse and visualise the AirBnB data to answer the research questions above, so the following questions were developed as a lens to aid answering above questions.
 
 - How many entire houses, private rooms and shared rooms are located in Pressure Rent Zones?
@@ -63,7 +64,6 @@ Creating new variables:
 - Student Accommodation: True or False
 - Rent or AirBnB: compares (available_nights ny price) and (rent_per_month by 12)
 
-
 ## Data Visualisation
 
 ### Overview of AirBnB
@@ -73,6 +73,7 @@ Creating new variables:
 
 ![Picture3](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture3.png) 
 
+### Rent Pressure Zones
 ![Picture4](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture4.png) 
 
 ![Picture5](https://github.com/kjonina/airbnb_and_irish_housing_crisis/blob/main/graphs/Picture5.png) 
