@@ -32,7 +32,7 @@ I stated that landlords would have made more money by long-term renting their pr
 
 But I failed to state by how much. 
 
-Creating a statement that would clearly state@ 'By Airbnbing you property for X months out of the year, you are losing out on an X amount of extra revenue.'
+Creating a statement that would clearly state: 'By AirBnBing you property for X months out of the year, you are losing out on an X amount of extra revenue.'
 
 Money talks. 
 
