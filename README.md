@@ -12,21 +12,21 @@ Changes to the code made:
 - In Stage 3, I delved into data exploration and was not sure what I was looking for.
 - In Stage 4, I focus my storytelling, eliminating a lot of other stories that can be told with the data, choosing to only tell one. 
 
-*Failed to identify the audience*
+**Failed to identify the audience**
 
 Through my analysis, I identified Irish landlords and the Irish government as my audience, I failed to truly identify my audience. 
 
-*Too Many Stories*
+**Too Many Stories**
 
 I tried to tell too many stories, only scratching the surface and failing to dive into any of them in depth. In my original story, I mentioned students and statistics about homelessness, I just kept adding in dataset. 
 
-*Failed to define terms*
+**Failed to define terms**
 
 I used the words ' more profitable' too carelessly, failing to define the phrase. 
 Had I done this in the first place, I would have swiftly realised that there is a formula for profit (revenue - expenses), which I could not comment on because I had no expenses data.
 The phrase that would be more suitable to the statement I was making would have been 'bring more revenue'.
 
-*Failed to make money talk*
+**Failed to make money talk**
 
 I stated that landlords would have made more money by long-term renting their property out. 
 
