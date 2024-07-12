@@ -1,0 +1,1217 @@
+---
+title: "Karina.Jonina.Project"
+author: "KarinaJonina"
+date: "5/1/2022"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    theme: united
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(stringr)
+library(knitr)
+library(plotly)
+library(forcats)
+library(crosstalk)
+library(here)
+library(camcorder)
+
+```
+
+
+```{R echo=FALSE, warning=FALSE, message=FALSE}
+camcorder::gg_record(dir = here("outputs"),
+  device = "png",
+  width = 8, height = 7,
+  units = "in", dpi = 320
+  )
+```
+
+
+## Files submitted
+- listings.csv - AirBnB listings in Ireland from the beginning of AirBnB operating in Ireland
+
+- calendar.csv - AirBnB listings from 23rd October 2021 to 21st October 2021 (dates not chosen by student, supplied by AirBnB), contains 9 million rows.
+
+- rent_pressure_zones.csv -RTZs (RPZs) were developed by the Irish government to tackle rising rents lack of affordable rental units. These are areas located in parts of the country where rents are the highest and rising, and where households have the greatest difficulty finding affordable accommodation (Residential Tenancies Board, 2021). The csv was manually created from RTB website. 
+
+- rent_in_ireland.csv - The website daft.ie is the leading property website in Ireland, which publishes reports on the Irish housing market every quarter. For this next dataset, the report Q2 2021 was used to find out the rent in each city and county in Ireland (Lyons, 2021). The csv was manually created from the report. 
+
+
+## Stage 1
+Due to the 9 million rows in calendar.csv, it was decided to treat this dataset outside of this analysis due to the size of it. 
+
+- calendar_df.Rmd - Code to treat calendar.csv and create the two datasets below to analyse in this report
+- summarise_df.csv - A new dataset from calendar.csv  was created, where listings were examined by availability for each month within a year (23rd October 2021 to 21st October 2022).
+- available_nights_df.csv - A new dataset summarising the number of available nights for each listing in a year (23rd October 2021 to 21st October 2022).
+- calendar_df.html - Document presents calendar_df.Rmd in HTML
+
+## Reading in the Airbnb Listings Data
+
+```{r}
+# specifying the path to the CSV file
+file_path <- here("data", "listings.csv")
+
+# Read the CSV file
+df <- read_csv(file_path)
+```
+
+In 'df' dataset, there are `r nrow(df) ` rows and `r ncol(df)` columns. Columns names are  `r colnames(df)`.
+
+```{r}
+#check the class of df
+class(df)
+```
+
+```{r}
+#check the column names for  df
+colnames(df)
+```
+
+```{r}
+# examining the structure in df
+str(df)
+```
+
+```{r}
+# examining the top 5 rows in df
+head(df)
+```
+
+```{r}
+# examining summary of all numeric columns in df
+summary(df)
+```
+
+
+### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| id | integer | AirBnB's unique identifier for the listing |
+| name | text | Title of the property on AirBnB |
+| host_id | interger | AirBnB's unique identifier for the host |
+| host_name | text | Host's name |
+| neighbourhood | text | Local Electoral Areas (LEAs) |
+| neighbourhood_group | text | County or City Council  |
+| latitude | numeric | Uses the World Geodetic System (WGS84) projection for latitude and longitude |
+| longitude | numeric | Uses the World Geodetic System (WGS84) projection for latitude and longitude |
+| room_type | string | Entire house/apt, Private room, Shared room, Hotel room |
+| price | currency | Daily price in local currency |
+| minimum_nights | integer | minimum number of night stay for the listing (calendar rules may be different) |
+| number_of_reviews | integer | The number of reviews the listing has |
+| last_review | date | The date of the last/newest review |
+| calculated_host_listings_count | integer | The number of listings the host has in the current scrape, in the city/region geography |
+| availability_365 | integer | availability_x. The availability of the listing x days in the future as determined by the calendar. Note a listing may be available because it has been booked by a guest or blocked by the host |
+| number_of_reviews_ltm | integer | The number of reviews the listing has (in the last 12 months) |
+| licence | string | Unclear from data dictionary provided by AirBnB |
+
+
+### Dateset 'summarise_df'
+Dateset 'summarise_df'  was created from 'calendar.csv', which was downloaded from the AirBnB website. It was downloaded from http://insideAirBnB.com/get-the-data.html (calendar.csv).  This dataset is between 23rd October 2021 to 21st October 2022. This dataset states whether the AirBnB listing is available on a specific date.
+
+To examine how this dataset was created please see Rmd file called 'calendar_df.Rmd'
+
+```{r}
+
+
+# specifying the path to the CSV file
+file_path <- here("data", "summarise_df.csv")
+
+# Read the CSV file
+summarise_df <- read_csv(file_path)
+
+```
+
+In 'summarise_df' dataset, there are `r nrow(summarise_df)` rows and `r ncol(summarise_df)` columns in the dataset.
+Columns names are  `r colnames(summarise_df)`.
+```{r}
+#check the class of summarise_df
+class(summarise_df)
+```
+
+```{r}
+#check the column names for  summarise_df
+colnames(summarise_df)
+```
+
+```{r}
+# examining the structure in summarise_df
+str(summarise_df)
+```
+
+```{r}
+# examining the top 5 rows in summarise_df
+head(summarise_df)
+```
+
+```{r}
+# examining summary of all numeric columns in summarise_df
+summary(summarise_df)
+```
+
+### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| listing_id | integer | AirBnB's unique identifier for the listing |
+| month | date | Month of the year |
+| count | integer | Number of nights available in that month |
+| min_price | integer | Minimum price for that listing in that month |
+| mean_price | integer | Mean price for that listing in that month |
+| max_price | integer | Maximum price for that listing in that month |
+
+### Dateset 'available_nights_df' 
+Dateset 'available_nights'  was created from 'calendar.csv', which was downloaded from the AirBnB website. It was downloaded from http://insideAirBnB.com/get-the-data.html (calendar.csv).  This dataset is between 23rd October 2021 to 21st October 2022. This dataset states whether the AirBnB listing is available on a specific date.
+
+To examine how this dataset was created please see Rmd file called 'calendar_df.Rmd'
+
+```{r}
+
+# specifying the path to the CSV file
+file_path <- here("data", "available_nights_df.csv")
+
+# Read the CSV file
+available_nights_df <- read_csv(file_path)
+
+```
+
+In 'available_nights_df' dataset, there are `r nrow(available_nights_df)` rows and `r ncol(available_nights_df)` columns in the dataset.
+Columns names are  `r colnames(available_nights_df)`.
+```{r}
+#check the class of available_nights_df
+class(available_nights_df)
+```
+
+```{r}
+#check the column names for  available_nights_df
+colnames(available_nights_df)
+```
+
+```{r}
+# examining the structure in available_nights_df
+str(available_nights_df)
+```
+
+```{r}
+# examining the top 5 rows in available_nights_df
+head(available_nights_df)
+```
+
+```{r}
+# examining summary of all numeric columns in available_nights_df
+summary(available_nights_df)
+```
+
+
+
+
+### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| listing_id | integer | AirBnB's unique identifier for the listing |
+| available_nights | integer | Number of nights avaible during the year |
+
+### Rent Pressure Zones
+Rent Pressure Zones (RPZs) were developed by the Irish government to tackle rising rents lack of affordable rental units. These are areas located in parts of the country where rents are the highest and rising, and where households have the greatest difficulty finding affordable accommodation (Residential Tenancies Board, 2021). The csv was manually created from RTB website. 
+
+```{r}
+
+# specifying the path to the CSV file
+file_path <- here("data", "rent_pressure_zones.csv")
+
+# Read the CSV file
+rpz_df <- read_csv(file_path, show_col_types = FALSE)
+
+
+```
+
+In 'rpz_df' dataset, there are `r nrow(rpz_df)` rows and `r ncol(rpz_df)` columns. Columns names are  `r colnames(rpz_df)`.
+```{r}
+#check the class of rpz_df
+class(rpz_df)
+```
+
+```{r}
+#check the column names for  rpz_df
+colnames(rpz_df)
+```
+
+```{r}
+# examining the structure in rpz_df
+str(rpz_df)
+```
+
+```{r}
+# examining the top 5 rows in rpz_df
+head(rpz_df)
+```
+
+```{r}
+# examining summary of all numeric columns in rpz_df
+summary(rpz_df)
+```
+
+### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| neighbourhood | text | LEA or County Council e.g. Kildare County Council and Naas LEA |
+| rpz | logical | Stating whether the area is in RTZs (RPZ): true or false |
+
+### Rent Prices in Ireland
+The website daft.ie is the leading property website in Ireland, which publishes reports on the Irish housing market every quarter. For this next dataset, the report Q2 2021 was used to find out the rent in each city and county in Ireland (Lyons, 2021). The csv was manually created from the report. 
+
+```{r}
+
+# specifying the path to the CSV file
+file_path <- here("data", "rent_in_ireland.csv")
+
+# Read the CSV file
+rent_df <- read_csv(file_path)
+
+```
+
+In 'rent_df' dataset, here are `r nrow(rent_df)` rows and `r ncol(rent_df)` columns. Columns names are `r colnames(rent_df)`.
+```{r}
+#check the class of rent_df
+class(rent_df)
+```
+
+```{r}
+#check the column names for  rent_df
+colnames(rent_df)
+```
+
+```{r}
+# examining the structure in rent_df
+str(rent_df)
+```
+
+```{r}
+# examining the top 5 rows in rent_df
+head(rent_df)
+```
+
+```{r}
+# examining summary of all numeric columns in rent_df
+summary(rent_df)
+```
+
+### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| county_city | text | County or City, e.g. County Galway and Galway City |
+| rent_price_per_month | integer | Average price of a rental property in an area |
+
+
+
+## Data Preparation
+### Dataset 'summarise_df'
+Column 'month' had to be declared a category and ordering of months had to occur.
+```{r}
+# changing 'month' to factor
+summarise_df$mmonth <- as.factor(summarise_df$month)
+
+# changing  the order of factors
+summarise_df$month <- factor(summarise_df$month, levels = c("January", "February", "March","April", "May", "June","July", "August", "September","October", "November", "December"))
+```
+
+### Dataset 'df'
+```{r echo=FALSE}
+str(df)
+```
+
+```{r echo=FALSE}
+# converrting last_review to a date format
+# df <- as_tibble(df)
+# df$last_review <- as.POSIXct(df$last_review)
+# str(df)
+```
+
+```{r echo=FALSE}
+# assigning factor to host_id
+df$host_id <- as.factor(df$host_id)
+
+# assigning factor to id
+df$id <- as.factor(df$id)
+```
+
+### License
+License has no unique values, therefore, it was dropped from the dataset.
+```{r}
+# examining unique values in column 'license'  
+unique(df$license)
+```
+
+```{r echo=FALSE}
+# dropping column 'license' because it is empty
+df<- df %>% 
+  # keep all columns except 'license'
+  select(-license)
+```
+
+```{r}
+#examining the columns names of df to make sure 'license' is dropped
+colnames(df)
+```
+
+
+### Number of Listings per Host
+The minimum  number of listings the host has in the current scrape, in the city/region geography  `r min(df$calculated_host_listings_count)` nights and is `r max(df$calculated_host_listings_count)`. On average, there are `r mean(df$calculated_host_listings_count)` listings per host. There are no issues with this column because the minimum of listings has to 1 (otherwise, the host has no listings on AirBnB).
+
+```{r}
+summary(df$calculated_host_listings_count)
+```
+
+### Number of Reviews in the last 12 months
+The minimum number of reviews in the last 12 months was for an AirBnB listing is  `r min(df$number_of_reviews_ltm)` nights and the maximum of number of reviews is `r max(df$number_of_reviews_ltm)`. On average, in the last 12 months, there were `r mean(df$number_of_reviews_ltm)` reviews per listing.
+
+```{r}
+summary(df$number_of_reviews_ltm)
+```
+
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~number_of_reviews_ltm) %>% 
+  add_histogram() %>% 
+  layout(xaxis = list(title = "Number of Reviews (12 Months)"),
+          yaxis = list(title = "# of Observations"),
+          title = "Histogram of Number of Reviews (12 Months)")
+```
+
+### Number of Reviews
+The minimum price for an AirBnB listing is  `r min(df$number_of_reviews)` and the maximum is `r max(df$number_of_reviews)`.  On average, there are `r mean(df$number_of_reviews)` reviews per listing.
+```{r}
+summary(df$number_of_reviews)
+```
+
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~number_of_reviews) %>% 
+  add_histogram(nbinsx = 100) %>% 
+  layout(xaxis = list(title = "Reviews"),
+          yaxis = list(title = "# of Observations"),
+          title = "Histogram of Reviews")
+```
+
+
+
+### Availability
+The minimum availability for an AirBnB listing is  `r min(df$availability_365)` and the maximum is `r max(df$availability_365)`. On average, the listings are available `r mean(df$availability_365)` nights  out of the year. 
+```{r}
+summary(df$availability_365)
+```
+
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~availability_365) %>% 
+  add_histogram(nbinsx = 100) %>% 
+  layout(xaxis = list(title = "Availability (# of nights)"),
+          yaxis = list(title = "# of Observations"),
+          title = "Histogram of Availability")
+```
+
+```{r echo=FALSE}
+# examining how 
+df %>% 
+  select(availability_365) %>% 
+  filter(availability_365 == 0) %>% 
+  group_by(availability_365) %>% 
+  summarise(count = n())
+```
+
+After much consideration, it was decided to remove 'availability_365'. On AirBnB data dictionary, it states that '[the] availability of the listing x days in the future as determined by the calendar. Note a listing may be available because it has been booked by a guest or blocked by the host.' It is very unclear what it is meant by 0 nights available. 
+
+```{r echo=FALSE}
+# number of observations (rows) in the dataset
+old_total <- nrow(df) 
+```
+
+
+### Merging Datasets: 'df' with 'available_nights_df'
+Instead, it was decided to examine next year's availability from available_nights_df (from 23rd October 2021 to 21st October 2022) to a more accurate reading of availability. Before changing availability column, there were `r old_total` rows in the dataset. 
+
+Dataset 'df' was merged with 'available_nights_df' using 'listing_id' in 'available_nights_df' and 'id' in 'df'. 
+
+```{r echo=FALSE}
+# merging the dataset together, merging on listings ID in each dataset. 
+df <- merge(df, available_nights_df, by.x = "id", by.y = "listing_id")
+```
+
+```{r echo=FALSE}
+# Histogram of availability
+df %>%
+  plot_ly(x = ~available_nights) %>% 
+  add_histogram(nbinsx = 100) %>% 
+  layout(xaxis = list(title = "Availability (# of nights)"),
+          yaxis = list(title = "# of Observations"),
+          title = "Histogram of Availability")
+```
+
+```{r echo=FALSE}
+# number of observations (rows) in the new dataset
+new_total <- nrow(df) 
+
+# finding out how many rows were dropped from the dataset
+changes <- old_total - new_total
+```
+
+After merging 'df' dataset on the columns 'id' from 'df' dataset and 'listing_df' from 'available_nights_df' dataset, there were `r new_total` rows in the dataset. `r changes` rows were dropped from the dataset. This would imply that the listings that are no longer available were dropped from the dataset. This was seen as important and accurate for answering the research questions because this would examine the amount of housing that will not be available to Irish tenants for long-term lease between 23rd October 2021 and 21st October 2022. It is unclear what happened to the `r changes` listings on the AirBnB or why they were unavailable on the stated year. This ensures that we analyse data relevant to the upcoming year, rather than examine all the previous listings of AirBnB in Ireland.
+
+### Minimum Nights
+The minimum stay for an AirBnB listing is  `r min(df$minimum_nights)` nights and the maximum of minimum nights is `r max(df$minimum_nights)` nights.  On average, the minimum stay must be `r mean(df$availability_365)` nights.  There were 6 rows that had minimum stay over 365 nights It was assumed to be an error and were dropped from the dataset.  
+
+```{r}
+summary(df$minimum_nights)
+```
+
+
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~minimum_nights) %>% 
+  add_histogram(nbinsx = 100) %>% 
+  layout(xaxis = list(title = "Mininum Nights"),
+          yaxis = list(title = "# of Observations"),
+          title = "Histogram of Mininum Nights")
+```
+
+
+```{r echo=FALSE}
+# select rows with minimum stays as more than 365 
+df %>% 
+  select(host_id, minimum_nights) %>% 
+  filter(minimum_nights > 365) %>% 
+  summarise(no_of_rows_more_than_365_nights = n())
+
+```
+
+```{r echo=FALSE}
+# filtering out max outlier
+df <-  df %>% 
+  # dropping row where minimum_nights is  1125
+  filter(!(minimum_nights > 365))
+```
+
+### After dropping the outliers
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~minimum_nights) %>% 
+  add_histogram(nbinsx = 100) %>% 
+  layout(xaxis = list(title = "Mininum Nights"),
+          yaxis = list(title = "# of Observations"),
+          title = "Histogram of Mininum Nights")
+```
+
+### Price
+The minimum price for an AirBnB listing is  `r min(df$price)` and the maximum is `r max(df$price)`.  As stated above, column 'price' is price per day of stay. Of course, price can not be €0 and this was examined to ensure none of the rows contained '0' in price. Maximum price seems to be is `r max(df$price)` per night, which seems to be inaccurate. This row was dropped from the dataset. 
+
+```{r}
+summary(df$price)
+```
+
+```{r echo=FALSE}
+# select rows with price as 0 and count rows affected
+df %>% 
+  select(host_id, price) %>% 
+  filter(price == 0) %>% 
+  summarise(no_of_rows_with_0 = n())
+```
+
+
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~availability_365, y = ~price) %>%
+  add_markers(marker = list(opacity = 0.2)) %>% 
+  layout(xaxis = list(title = "Availability (# of nights)"),
+          yaxis = list(title = "Price (in €)"),
+          title = "Scatterplot of Availability and Price")
+```
+
+
+```{r echo=FALSE}
+# filtering out max outlier
+df <-  df %>% 
+  # dropping row where price is  1173721 or 0 
+  filter(!(price == 1173721 | price == 0))
+```
+
+### After dropping the outliers
+After dropping the outliers, there are `r nrow(df) ` row in 'df' dataset.
+```{r}
+summary(df$price)
+```
+
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~availability_365, y = ~price) %>%
+  add_markers(marker = list(opacity = 0.2)) %>% 
+  layout(xaxis = list(title = "Availability (# of nights)"),
+        yaxis = list(title = "Price (in €)"),
+        title = "Scatterplot of Availability and Price")
+```
+
+### Room Type
+```{r echo=FALSE}
+# personal preference 
+df$room_type <- str_replace(df$room_type, 'Entire home/apt', 'Entire rental unit')
+```
+There are 4 room types: `r unique(df$room_type)`. However, hotels have planning permission with relevant authorities to host guests and lease rooms, therefore, hotels will be dropped from the data. Because of the small amount of shared rooms in the dataset, shared room were also dropped. 
+
+```{r echo=FALSE}
+df %>% 
+  select(room_type) %>% 
+  group_by(room_type) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count))
+```
+
+```{r echo=FALSE}
+# removing hotel
+df <-  df %>% 
+  filter(!(room_type == 'Hotel room' | room_type == 'Shared room')) 
+```
+
+```{r echo=FALSE}
+# declaring column as a factor
+df$room_type <- as.factor(df$room_type)
+```
+
+
+```{r}
+# examining room type available in Room Type
+unique(df$room_type)
+```
+After dropping the 'Hotel room' from the data, there are `r nrow(df) ` row in 'df' dataset.
+
+### Neighbourhood (renamed to 'lea')
+Neighboourhood has some unclean data and 'LEA' was dropped from the values in the column. 
+
+```{r echo=FALSE}
+# declaring column as a factor
+df$neighbourhood <- as.factor(df$neighbourhood)
+df$neighbourhood_group <- as.factor(df$neighbourhood_group)
+```
+
+```{r results='hide', echo=FALSE}
+# examining unique values in column 'neighbourhood'  
+unique(df$neighbourhood)
+```
+
+
+```{r echo=FALSE}
+# getting rid of LEA from the neighbourhood
+df$neighbourhood <- str_replace(df$neighbourhood, '-7', '')
+df$neighbourhood <- str_replace(df$neighbourhood, '-6', '')
+df$neighbourhood <- str_replace(df$neighbourhood, '-5', '')
+df$neighbourhood <- str_replace(df$neighbourhood, '-4', '')
+df$neighbourhood <- str_replace(df$neighbourhood, '-3', '')
+df$neighbourhood <- str_replace(df$neighbourhood, '-3', '')
+df$neighbourhood <- str_replace(df$neighbourhood, '-lea-7', ' LEA')
+df$neighbourhood <- str_replace(df$neighbourhood, '-LEA', ' LEA')
+
+# neighbourhood column is really 'lea'
+df <- rename(df, lea=neighbourhood)
+
+# declaring column as a factor
+df$lea <- as.factor(df$lea)
+```
+
+```{r echo=FALSE}
+# some values were still incorrect so they were manually changed
+df$lea <- str_replace_all(df$lea, c('Graiguecullen -Portarlington LEA ' = 'Graiguecullen-Portarlington LEA',
+                                    'Cavan - Belturbet LEA' = 'Cavan-Belturbet LEA',
+                                    'Bandon - Kinsale LEA' ='Bandon-Kinsale LEA',
+                                    'Bailieborough - Cootehill LEA' = 'Bailieborough-Cootehill LEA',
+                                    'Laytown  Bettystown-lea' = 'Laytown-Bettystown LEA',
+                                    'DÃºn Laoghaire LEA' = 'Dún Laoghaire-Rathdown County Council'))
+```
+
+```{r}
+unique(df$lea)
+```
+
+
+### Neighbourhood Group (renamed to 'council')
+```{r echo=FALSE}
+# renaming neighbourhood_group to council because this is more accurate name
+df<- rename(df, council = neighbourhood_group)
+
+# declaring column as a factor
+df$council <- as.factor(df$council)
+
+# some values were still incorrect so they were manually changed
+df$council <- str_replace(df$council, 'Dun Laoghaire-rathdown County Council', 'Dún Laoghaire-Rathdown County Council')
+```
+
+```{r}
+# examining unique values in column 'council'  
+unique(df$council)
+```
+
+### New Variable: County
+A new variable 'county' was created from 'neighbourhood_group'. Several counties may have two or more county or city councils such as Cork, which has two councils: Cork City Council and Cork County Council. County Galway has two councils too: Galway City Council and Galway County Council.  Dublin has several councils: Fingal County Council, South Dublin County Council, Dún Laoghaire-Rathdown County Council, Dublin County Council. Some councils have two in one like Limerick City And County Council. To find out the county, string manipulation was conducted.
+
+```{r echo=FALSE}
+# getting rid of County Council from the council to assign county
+df$county <- str_replace(df$council, ' County Council', '')
+df$county <- str_replace(df$county, ' City Council', '')
+df$county <- str_replace(df$county, ' City And', '')
+
+# neighbourhood group in Dublin
+df$county <- str_replace(df$county, 'Dún Laoghaire-Rathdown', 'Dublin')
+df$county <- str_replace(df$county, 'Fingal', 'Dublin')
+df$county <- str_replace(df$county, 'South Dublin', 'Dublin')
+
+# assigning factor to country
+df$county <- as.factor(df$county)
+```
+
+```{r}
+unique(df$county)
+```
+
+
+
+
+
+### New Variable: Lease
+Short-term lets are stays of less than 14 days at a time, for example, if you rent out your property on a booking website such as AirBnB so people can stay there for a weekend (Citizensinformation.ie, no date).
+
+A new variable 'term' was created to state whether the listing is 'short-term lease' or 'long-term lease'. 
+```{r echo=FALSE}
+df <- df %>%  
+  select(everything()) %>%
+  mutate(term = if_else(minimum_nights <= 14, 'short-term lease', 'long-term lease'))
+
+# assigning factor to term
+df$term <- as.factor(df$term)
+```
+
+```{r echo=FALSE}
+# examining the count of term 
+df %>% 
+  select(term) %>% 
+  group_by(term) %>% 
+  summarise(count = n())
+```
+
+### New Variable: 90-Day Threshold
+Homeowners in RTZs (RPZs) are required to apply for planning permission if they let out their entire home (principal private residence) for short-term lets of more than 90 days in total while they are away. Principal private residence is the place where one ordinarily live (Citizensinformation.ie, no date).
+
+
+A new variable 'threshold_day_90' was created to state whether the listing is 'under-90' or 'over-90' days. 
+```{r echo=FALSE}
+df <- df %>%  
+  mutate(threshold_day_90 = if_else(availability_365 < 90, 'under-90', 'over-90'))
+
+# assigning factor to threshold_day_90
+df$threshold_day_90 <- as.factor(df$threshold_day_90)
+```
+
+```{r echo=FALSE}
+# examining the count of threshold_day_90 
+df %>% 
+  select(threshold_day_90) %>% 
+  group_by(threshold_day_90) %>% 
+  summarise(count = n())
+```
+
+
+### New Variable: Total Income
+Creating a new variable 'total_income', examining the full income potential of a listings by multiplying the price by the number of nights it is available for. 
+
+```{r echo=FALSE}
+df <- df %>%  
+  select(everything()) %>%
+  mutate(total_income = price*availability_365)
+
+```
+
+```{r}
+summary(df$total_income)
+```
+
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~total_income) %>% 
+  add_histogram() %>% 
+  layout(xaxis = list(title = "Total Income"),
+          yaxis = list(title = "Number of Observations"),
+          title = "Histogram of Total Income")
+```
+
+
+```{r echo=FALSE}
+# number of observations (rows) in the dataset
+old_total_income <- nrow(df) 
+```
+
+### After Dropping Outliers
+There are `r old_total_income` rows in the 'df' dataset before dropping outliers. As seen above in the histogram, there are very limited amount of properties that are above €200,000 in total income per year. It was decided to drop all rows that are over €200,000 in total income because in this project, the affordable listings are examined in relation to the Irish Housing Crisis. Only the 'affordable' houses will be examined. It was unclear where to make the cut-off. It was decided to make €200,000 the cut-off even though paying potential rent of €200,000 is not affordable when a tenant is competing the AirBnB prices.  
+
+```{r echo=FALSE}
+df <-  df %>% 
+  filter(total_income < 200000)
+```
+
+```{r echo=FALSE}
+df %>%
+  plot_ly(x = ~total_income) %>% 
+  add_histogram() %>% 
+  layout(xaxis = list(title = "Total Income"),
+          yaxis = list(title = "Number of Observations"),
+          title = "Histogram of Total Income")
+```
+
+```{r echo=FALSE}
+# number of observations (rows) in the new dataset
+new_total_income <- nrow(df) 
+
+# finding out how many rows were dropped from the dataset
+dropped_total_income <- old_total - new_total_income
+```
+
+After dropping all rows with total potential income from AirBnB over €200,000, there were `r new_total_income` rows in the dataset. `r dropped_total_income` rows were dropped from the dataset.
+
+
+### Merging Datasets: 'df' with 'rent_df'
+In 'df' dataset, a new column 'county_city' was created from 'council' to be the same as 'county_city' in 'rent_df'. 
+
+```{r}
+unique(rent_df$county_city)
+```
+
+
+Datasets 'df' and 'rent_df' were merged on column 'county_city'.
+
+```{r echo=FALSE}
+# getting rid of County Council from the 'council' to assign county_city
+df$county_city <- str_replace(df$council, ' LEA', '')
+df$county_city <- str_replace(df$county_city, ' Council', '')
+df$county_city <- str_replace(df$county_city, ' City And', '')
+
+# changing 'council' in Dublin
+df$county_city <- str_replace(df$county_city, 'Dun Laoghaire-rathdown', 'Dublin')
+df$county_city <- str_replace(df$county_city, 'Fingal', 'Dublin')
+df$county_city <- str_replace(df$county_city, 'South Dublin', 'Dublin')
+```
+
+```{r echo=FALSE, results='hide'}
+unique(df$county_city)
+```
+
+```{r echo=FALSE}
+# creating a new variable 'county_city' from 'county' to match 'county_city' in 'rent_df'  
+# replacing strings 
+df$county_city <- str_replace_all(df$county_city, c('Carlow County' = 'County Carlow',
+                                                    'Dublin County' = 'Dublin City',
+                                          'Galway County' = 'County Galway',
+                                          'Cork County' = 'County Cork',
+                                          'Waterford County' = 'County Waterford',
+                                          'Offaly County' = 'County Offaly', 
+                                          'Wicklow County' = 'County Wicklow', 
+                                          'Tipperary County' = 'County Tipperary', 
+                                          'Monaghan County' = 'County Monaghan', 
+                                          'Sligo County' = 'County Sligo', 
+                                          'Wexford County' = 'County Wexford', 
+                                          'Clare County' = 'County Clare', 
+                                          'Donegal County' = 'County Donegal', 
+                                          'Meath County' = 'County Meath', 
+                                          'Westmeath County' = 'County Westmeath', 
+                                          'Mayo County' = 'County Mayo', 
+                                          'Kildare County' = 'County Kildare',
+                                          'Kerry County'= 'County Kerry',
+                                          'Louth County' = 'County Louth',
+                                          'Longford County' = 'County Longford',
+                                          'Leitrim County' = 'County Leitrim',
+                                          'Kilkenny County'= 'County Kilkenny',
+                                          'Laois County'= 'County Laois',
+                                          'Roscommon County'= 'County Roscommon',
+                                          'Limerick County' = 'County Limerick',
+                                          'Cavan County' = 'County Cavan'))
+
+
+
+# assigning factor to county_city  variable
+df$county_city <- as.factor(df$county_city)
+```
+
+
+```{r echo=FALSE}
+# merging the dataset together
+df<- merge(df, rent_df, by.x = "county_city", by.y = "county_city")
+```
+
+
+
+### New Variable: Rent Per Day
+Using rent_df (dataset with county or city and average rent), A new variable was calculated 'rent_price_per_day' which is the rent the tenant pays per day to stay in their rented property. Although this is not how this is not normally used in the renting market, this variable will be compared to the price of AirBnB, which is in 'per day'. It was decided to find the rent per day, because not all properties are leased for 365 days a year.
+
+It was also assumed that private rooms will cost one third of an entire house to rent, i.e. if a house's rent is €1500, then a room to rent is €500. Although this is not the most accurate estimate, it is better than assuming that the price of a private room is the same as a rent of the whole house, i.e. €1500 for private room. This was also operated under the assumptions that all rooms in the house are the same size and have the same bathroom privileges, i.e. all en suite or all sharing.
+
+
+```{r echo=FALSE}
+# if the property is 'Entire rental unit'. then multiply rent_price_per_month by 12 (months) and divide by 365 (days)
+# otherwise ('Private room' or 'Shared room') multiply rent_price_per_month by 12 (months), divide by 365 (days) and divide by 3 (rooms in the house)
+df <- df %>%  
+  mutate(rent_price_per_day = if_else(room_type == 'Entire rental unit', (rent_price_per_month*12)/365, ((rent_price_per_month*12)/365)/3))
+```
+
+
+```{r echo=FALSE}
+# if the property is 'Entire rental unit'. then multiply rent_price_per_month by 12 (months) 
+# otherwise ('Private room' or 'Shared room') multiply rent_price_per_month by 12 (months) and divide by 3 (rooms in the house)
+df <- df %>%  
+  mutate(rent_price_per_year = if_else(room_type == 'Entire rental unit', rent_price_per_month*12, (rent_price_per_month*12)/3))
+```
+
+
+### New Variable: Rent or AirBnB?
+New variable was created to examine whether the property should be rented or AirBnB listing.
+
+Some thought was given to whether to compare AirBnB daily price and rent per day OR total income possible from AirBnB and total income from rent. Although comparing daily AirBnB and rent per day would allow to compare the income the landlord would get on per day, it does not show whether it is actually worth while listing the property on AirBnB bringings in more earnings than renting when taking in consideration the amount of nights that the property is available. Two varialbes were developed to examine this: per day and per year.  
+If the AirBnB price is greater than price, then the property should be an AirBnB listing.
+If the AirBnB price is lower than price, then the property should be rented.
+
+```{r echo=FALSE}
+# creating a new variable to state whether the property should be rented or on AirBnB
+df <- df %>%  
+  mutate(per_day_rent_AirBnB = if_else(price >= rent_price_per_day, 'AirBnB', 'Rent'))
+
+
+# assigning factor to per_day_rent_AirBnB
+df$per_day_rent_AirBnB <- as.factor(df$per_day_rent_AirBnB)
+```
+
+```{r echo=FALSE}
+# examining the count of per_day_rent_AirBnB
+df %>% 
+  select(per_day_rent_AirBnB) %>% 
+  group_by(per_day_rent_AirBnB) %>% 
+  summarise(count = n())
+
+```
+
+``` {r echo=FALSE}
+# creating a new variable to state whether the property should be rented or on AirBnB
+
+df <- df %>%  
+  select(everything()) %>%
+  mutate(per_year_rent_AirBnB = if_else(total_income >= rent_price_per_year, 'AirBnB', 'Rent'))
+
+# assigning factor to per_year_rent_AirBnB
+df$per_year_rent_AirBnB <- as.factor(df$per_year_rent_AirBnB)
+```
+
+```{r echo=FALSE}
+# examining the count of per_day_rent_AirBnB
+df %>% 
+  select(per_year_rent_AirBnB) %>% 
+  group_by(per_year_rent_AirBnB) %>% 
+  summarise(count = n())
+
+```
+
+### New Variable: Difference in Earnings - Long-Term or Airbnb - Numbers
+```{r message=FALSE, echo=FALSE}
+df <- df %>%
+  mutate(annual_diff_rent_minus_Airbnb =rent_price_per_year -  total_income)
+ 
+df %>%
+    select(total_income, price, availability_365,rent_price_per_day, rent_price_per_month, rent_price_per_year, per_day_rent_AirBnB, per_year_rent_AirBnB) 
+```
+
+### New Variable: RTZ
+
+The column 'county_city' in 'rpz_df' had values which contained both values from columns 'council' and 'lea'. In this case, a new column had to be created stating whether the listing is a RTZ or not. 
+
+```{r echo=FALSE}
+unique(rpz_df$neighbourhood)
+```
+
+```{r echo=FALSE}
+# Creating a new variable 
+# Manually assessing whether it is TRUE or FALSE
+# the list was taken from 'neighbourhood' in 'rpz_df' dataset
+df <- df %>%  
+  mutate(
+    rent_pressure_zone = case_when(
+      str_detect(council, 'Cork City Council') ~ TRUE,
+      str_detect(council, 'Dublin City Council') ~ TRUE,
+      str_detect(council, 'Dún Laoghaire-Rathdown County Council') ~ TRUE,
+      str_detect(council, 'Fingal County Council') ~ TRUE,
+      str_detect(council, 'South Dublin County Council') ~ TRUE,
+      str_detect(council, 'Kildare County Council') ~ TRUE,
+      str_detect(lea, 'Ballincollig–Carrigaline LEA') ~ TRUE,
+      str_detect(lea, 'Galway City Central LEA') ~ TRUE,
+      str_detect(lea, 'Galway City West LEA') ~ TRUE,
+      str_detect(lea, 'Galway City East LEA') ~ TRUE,
+      str_detect(lea, 'Drogheda LEA') ~ TRUE,
+      str_detect(lea, 'Drogheda Urban LEA') ~ TRUE,
+      str_detect(lea, 'Drogheda Rural LEA') ~ TRUE,
+      str_detect(lea, 'Celbridge-Leixlip LEA') ~ TRUE,
+      str_detect(lea, 'Naas LEA') ~ TRUE,
+      str_detect(lea, 'Newbridge LEA') ~ TRUE,
+      str_detect(lea, 'Ashbourne LEA') ~ TRUE,
+      str_detect(lea, 'Laytown-Bettystown LEA') ~ TRUE,
+      str_detect(lea, 'Ratoath LEA') ~ TRUE,
+      str_detect(lea, 'Bray West LEA') ~ TRUE,
+      str_detect(lea, 'Bray East LEA') ~ TRUE,
+      str_detect(lea, 'Wicklow LEA') ~ TRUE,
+      str_detect(lea, 'Cobh LEA') ~ TRUE,
+      str_detect(lea, 'Maynooth LEA') ~ TRUE,
+      str_detect(lea, 'Drogheda LEA') ~ TRUE,
+      str_detect(lea, 'Greystones LEA') ~ TRUE,
+      str_detect(lea, 'Limerick City East LEA') ~ TRUE,
+      str_detect(lea, 'Navan LEA') ~ TRUE,
+      str_detect(lea, 'Fermoy LEA') ~ TRUE,
+      str_detect(lea, 'Midleton LEA') ~ TRUE,
+      str_detect(lea, 'Athenry-Oranmore LEA') ~ TRUE,
+      str_detect(lea, 'Gort-Kinvara LEA') ~ TRUE,
+      str_detect(lea, 'Kilkenny LEA') ~ TRUE,
+      str_detect(lea, 'Graiguecullen-Portarlington LEA') ~ TRUE,
+      str_detect(lea, 'Portlaoise LEA') ~ TRUE,
+      str_detect(lea, 'Limerick City North LEA') ~ TRUE,
+      str_detect(lea, 'Limerick City West LEA') ~ TRUE,
+      str_detect(lea, 'Ardee LEA') ~ TRUE,
+      str_detect(lea, 'Dundalk-Carlingford LEA') ~ TRUE,
+      str_detect(lea, 'Dundalk South LEA') ~ TRUE,
+      str_detect(lea, 'Kells LEA') ~ TRUE,
+      str_detect(lea, 'Trim LEA') ~ TRUE,
+      str_detect(lea, 'Waterford City East LEA') ~ TRUE,
+      str_detect(lea, 'Waterford City South LEA') ~ TRUE,
+      str_detect(lea, 'Athlone LEA') ~ TRUE,
+      str_detect(lea, 'Gorey LEA') ~ TRUE,
+      str_detect(lea, 'Arklow LEA') ~ TRUE,
+      str_detect(lea, 'Carlow LEA') ~ TRUE,
+      str_detect(lea, 'Macroom LEA') ~ TRUE,
+      str_detect(lea, 'Cobh LEA') ~ TRUE,
+      str_detect(lea, 'Piltown LEA') ~ TRUE,
+      str_detect(lea, 'Sligo-Strandhill LEA') ~ TRUE,
+      str_detect(lea, 'Baltinglass LEA') ~ TRUE,
+      str_detect(lea, 'Mallow LEA') ~ TRUE,
+      str_detect(lea, 'Killarney LEA') ~ TRUE,
+      str_detect(lea, 'Athy LEA') ~ TRUE,
+      str_detect(lea, 'Tullamore LEA') ~ TRUE,
+      str_detect(lea, 'Mullingar LEA') ~ TRUE,
+      str_detect(lea, 'Bandon-Kinsale LEA') ~ TRUE,
+      TRUE ~ FALSE)) 
+
+
+# changing TRUE to 'RPZ' (RTZ) 
+df$rent_pressure_zone <- str_replace(df$rent_pressure_zone, 'TRUE', 'RPZ')
+
+# changing False to 'Non-RPZ' (Non RTZ) 
+df$rent_pressure_zone <- str_replace(df$rent_pressure_zone, 'FALSE', 'Non-RPZ')
+
+# assigning factor to rent_pressure_zone  variable
+df$rent_pressure_zone <- as.factor(df$rent_pressure_zone)
+```
+
+```{r results='hide', echo=FALSE}
+unique(df$rent_pressure_zone)
+```
+
+```{r echo=FALSE}
+# examining the count of rent_pressure_zone TRUE or FALSE
+df %>% 
+  select(rent_pressure_zone) %>% 
+  group_by(rent_pressure_zone) %>% 
+  summarise(count = n())
+```
+
+### New Variable: Planning Permission
+Creating a new variable 'planning_permission' in 'df' dataset to examine whether planning permission is required for the AirBnB listing. As stated above, an AirBnB listings of an entire property over 90 days in RTZ requires planning permission with the local authorites. New column will state whether planning permission is required or not. 
+```{r echo=FALSE}
+df <- df %>%  
+  mutate(planning_permission = if_else((room_type == 'Entire rental unit' & threshold_day_90 == 'over-90' & rent_pressure_zone =='RPZ'), 'Planning Required', 'Not Required'))  
+```
+
+
+```{r echo=FALSE}
+# examining the count of planning_permission 
+df %>% 
+  select(planning_permission) %>% 
+  group_by(planning_permission) %>% 
+  summarise(count = n())
+```
+
+
+### New Variable: Months Categor
+Creating a new variable 'planning_permission' in 'df' dataset to examine whether planning permission is required for the AirBnB listing. As stated above, an AirBnB listings of an entire property over 90 days in RTZ requires planning permission with the local authorites. New column will state whether planning permission is required or not. 
+```{r echo=FALSE}
+# Assuming sum_df is your dataset with availability_365 column
+df <- df %>%
+  mutate(month_category = case_when(
+    availability_365 <= 30 ~ "1 month",
+    availability_365 <= 61 ~ "2 months",
+    availability_365 <= 91 ~ "3 months",
+    availability_365 <= 122 ~ "4 months",
+    availability_365 <= 152 ~ "5 months",
+    availability_365 <= 183 ~ "6 months",
+    availability_365 <= 213 ~ "7 months",
+    availability_365 <= 244 ~ "8 months",
+    availability_365 <= 274 ~ "9 months",
+    availability_365 <= 305 ~ "10 months",
+    availability_365 <= 335 ~ "11 months",
+    availability_365 <= 365 ~ "12 months",
+    TRUE ~ "More than 12 months"  # Covering cases beyond 1 year (365 days)
+  ))
+
+
+# changing  the order of factors
+df$month_category <- factor(df$month_category, levels = c("1 month", 
+                                                            "2 months",
+                                                            "3 months",
+                                                            "4 months",
+                                                            "5 months",
+                                                            "6 months",
+                                                            "7 months",
+                                                            "8 months",
+                                                            "9 months",
+                                                            "10 months",
+                                                            "11 months",
+                                                            "12 months",
+                                                            "More than 12 months"
+                                                            ))
+# Print the first few rows to check
+head(df)
+
+```
+
+
+### New Datasets: 'df' with 'summarise_df'
+Dataset 'df' was merged with 'summarise_df' using 'listing_id' in 'available_nights_df' and 'id' in 'df'. 
+
+```{r echo=FALSE}
+# merging the dataset together
+large_df<- merge(df, summarise_df, by.x = "id", by.y = "listing_id")
+```
+
+```{r}
+names(large_df)
+```
+
+
+```{r echo=FALSE}
+# dropping irrelevant columns
+drop = c("id","host_id", "month", "count", "county", "room_type","term", "threshold_day_90", "planning_permission", "rent_pressure_zone", "per_day_rent_AirBnB", "per_year_rent_AirBnB", "max_price", "mean_price", "min_price", "month_category")
+
+large_df <- large_df[names(large_df) %in% drop] 
+```
+
+```{r}
+names(large_df)
+```
+
+In the final 'large_df' dataset, there are `r nrow(large_df) ` rows and `r ncol(large_df)` columns. Columns names are  `r colnames(large_df)`. 
+
+```{r echo=FALSE}
+str(large_df)
+```
+
+```{r echo=FALSE}
+nrow(large_df)
+```
+
+```{r echo=FALSE}
+ncol(large_df)
+```
+
+```{r echo=FALSE}
+head(large_df)
+```
+
+```{r echo=FALSE}
+summary(large_df)
+```
+
+### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| id | integer | AirBnB's unique identifier for the listing |
+| host_id | integer | Host's unique identifier |
+| month | date | Month of the year |
+| min_price | integer | Minimum price for that listing in that month |
+| mean_price | integer | Mean price for that listing in that month |
+| max_price | integer | Maximum price for that listing in that month |
+| count | integer | Number of nights available in that month |
+| county | text | County of AirBnB Listing |
+| room_type | logical | Room type: Entire rental unit, Private room, Shared room |
+| threshold_day_90 | text | Whether over-90 or under-90 days |
+| term | text | Whether the AirBnB listing is available for long-term lease or short-term lease |
+| per_day_rent_AirBnB  | text | Whether the property should be AirBnBed or rented our based on daily price |
+| per_year_rent_AirBnB | text | Whether the property should be AirBnBed or rented our based on potential income |
+
+
+# Final Dataset
+In the final 'df' dataset, there are `r nrow(df) ` rows and `r ncol(df)` columns. Columns names are  `r colnames(df)`. 
+
+Because our dataset was has been merged with 'available_nights_df', as described above, our dataset has AirBnB listings only available from 23rd October 2021 to 21st October 2022. Any past AirBnB are not included in our dataset. 
+
+```{r echo=FALSE}
+summary(df)
+```
+
+```{r echo=FALSE}
+nrow(df)
+```
+
+```{r echo=FALSE}
+ncol(df)
+```
+### Data Dictionary
+| Field | Type  | Description |
+|:-|:-|:-|
+| id | integer | AirBnB's unique identifier for the listing |
+| name | text | Title of the property on AirBnB |
+| host_id | interger | AirBnB's unique identifier for the host |
+| host_name | text | Host's name |
+| lea | text | Local Electoral Areas (LEAs) |
+| council | text | County or City Council  |
+| county | text | County of the AirBnB Listing  |
+| latitude | numeric | Uses the World Geodetic System (WGS84) projection for latitude and longitude |
+| longitude | numeric | Uses the World Geodetic System (WGS84) projection for latitude and longitude |
+| room_type | string | Entire rental unit, Private room, Shared room, Hotel room |
+| price | currency | Daily price in local currency |
+| minimum_nights | integer | minimum number of night stay for the listing (calendar rules may be different) |
+| number_of_reviews | integer | The number of reviews the listing has |
+| last_review | date | The date of the last/newest review |
+| calculated_host_listings_count | integer | The number of listings the host has in the current scrape, in the city/region geography |
+| availability_365 | integer | availability_x. The availability of the listing x days in the future as determined by the calendar. Note a listing may be available because it has been booked by a guest or blocked by the host |
+| number_of_reviews_ltm | integer | The number of reviews the listing has (in the last 12 months) |
+| total_income | interger | AirBnB listings potential total income (available nights * price) |
+| threshold_day_90 | text | Whether over-90 or under-90 days |
+| term | text | Whether the AirBnB listing is available for long-term lease or short-term lease |
+| per_day_rent_AirBnB  | text | Whether the property should be AirBnBed or rented our based on daily price |
+| per_year_rent_AirBnB | text | Whether the property should be AirBnBed or rented our based on potential income |
+
+
+```{r echo=FALSE}
+# Define the file path using here
+file_path <- here("data", "airbnb_final_df.csv")
+
+# Save the dataframe as a CSV file
+write.csv(df, file = file_path, row.names = FALSE)
+
+###################
+# Define the file path using here
+file_path <- here("data", "airbnb_large_df.csv")
+# Save the dataframe as a CSV file
+write.csv(large_df, file = file_path)
+```
+
+## Data Sources
+
+Lyons, R. (2021) *Irish Rental Report Q2 2021.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 17 December 2021).
+
+Residential Tenancies Board (2021) *What are Rent Pressure Zones (RPZ)?* Available at: https://www.rtb.ie/during-a-tenancy/rent-review-in-a-rent-pressure-zone-rpz?gclid=Cj0KCQiAzfuNBhCGARIsAD1nu-8YhjJPsVbhgWjuM0et4lZX2ansT4b4XkLEEx9G63vDiVsptSzv8toaAkdDEALw_wcB (Accessed: 19 December 2021).

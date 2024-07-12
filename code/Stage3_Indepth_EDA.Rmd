@@ -1,0 +1,1608 @@
+---
+title: "Karina.Jonina.Project"
+author: "KarinaJonina"
+date: "5/1/2022"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    theme: united
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(dplyr)
+library(stringr)
+library(knitr)
+library(plotly)
+library(here)
+library(forcats)
+library(crosstalk)
+```
+
+
+
+```{r setup, include=FALSE}
+# specifying the path to the CSV file
+file_path <- here("data", "airbnb_final_df.csv")
+
+# Read the CSV file
+df <- read_csv(file_path)
+```
+
+
+# Indepth Data Exploration - Data Visualisation
+```{r echo=FALSE}
+# assigning colors to specific variable 
+# will be used in graphs to ensure that the colours remain the same.
+# creates association with colour and variables
+
+#RPZ or Non-RPZ
+pressure_colors = c( "#316395", "#D62728")
+
+#entire rental unit, private room, shared room
+room_colors = c('#54A24B', '#72B7B2', '#B279A2')
+
+# rent or AirBnB
+rent_colors = c('#565656', '#F58518')
+
+#over-90 or under-90
+threshold_colors = c('#FF9DA6', '#72B7B2')
+
+
+# availability
+reverse_viridis = c( "#FDE725FF",
+                     '#B8DE29FF',
+                     '#73D055FF',
+                     '#29AF7FFF',
+                     '#1F968BFF',
+                     '#2D708EFF',
+                     '#39568CFF',
+                     '#482677FF',
+                     "#440154FF")
+```
+
+## AirBnB OverView
+```{r echo=FALSE, warning=FALSE}
+# creating a map of Ireland with AirBnB listings
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(df, lat = ~latitude, lon = ~longitude, color = ~county)
+fig <- fig %>% add_markers(marker = list(opacity = 0.4), showlegend = FALSE,
+                
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights))
+fig <- fig %>% layout(
+    title = 'Where are the AirBnB listings in Ireland?', geo = g)
+
+fig
+```
+**Comment:**
+It is clear from this graph that there are some parts of Ireland that have more AirBnB listings than others. It is easy to see that there are more properties available on the coast than inland. 
+
+
+### Room Types are available on AirBnB
+```{r warning=FALSE, echo=FALSE}
+df %>%
+  count(room_type) %>%
+  mutate(room_type = fct_reorder(room_type, n, .desc = TRUE)) %>%
+  plot_ly(x = ~room_type, y = ~n, color = ~room_type,
+          hovertemplate = ~paste("Room Type:", room_type, "<br>", 
+                                 "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title= 'What Accomodation Types are available on AirBnB  in Ireland?')
+```
+
+### Where are the AirBnB listings in Ireland?
+```{r warning=FALSE, echo=FALSE}
+df %>%
+  count(county) %>%
+  mutate(county = fct_reorder(county, n, .desc = TRUE)) %>%
+  plot_ly(x = ~county, y = ~n, color = ~county,
+          
+          hovertemplate = ~paste("County:", county, "<br>", "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title= 'Which counties have the most AirBnB listings in Ireland?')
+```
+**Comment:**
+It was surprising to see that Kerry has more AirBnB listings available than Dublin. It is also important to note that the first seven in the table (except for Dublin) are all on the Wild Atlantic Way. 
+
+### Summary of AirBnB listings
+```{r echo=FALSE}
+# examining the mean and the max or price for each county
+df %>% 
+  select(county, price, minimum_nights) %>% 
+  group_by(county) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights)) %>% 
+  arrange(desc(no_of_listings))
+
+```
+**Comment:**
+Even though Kerry has more options for accomondation than Dublin, it is also more expensive. 
+
+### When are most AirBnB listings Available?
+```{r echo=FALSE, warning=FALSE}
+# eamining the number of AirBnB listings available in each month
+summarise_df %>% 
+  select(listing_id, month) %>% 
+  group_by(month) %>% 
+  summarize(count_distinct = n_distinct(listing_id))
+```
+
+```{r echo=FALSE, warning=FALSE}
+# creating a dataset of the table above
+sum_df <- summarise_df %>% 
+  select(listing_id, month) %>% 
+  group_by(month) %>% 
+  #conting distinct AirBnB listing's id
+  summarize(count_distinct = n_distinct(listing_id))
+
+
+sum_df %>%
+  plot_ly(x = ~month, y = ~count_distinct, color = ~month,
+          hovertemplate = ~paste("Month:", month, "<br>", 
+                                 "Number of AirBnB listings:", count_distinct)) %>%
+  add_bars(showlegend = FALSE) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title = "When are the most AirBnB listings Available?")
+```
+**Comment:**
+There are less AirBnB listings available in the summer, than the winter. However, it is possible that the AirBnB listings are not yet for the summer.
+
+### Breakdown by County
+```{r warning=FALSE, echo=FALSE}
+df %>%
+  count(room_type, county) %>%
+  mutate(room_type = fct_reorder(room_type, n, .desc = TRUE)) %>%
+  plot_ly(x = ~room_type, y = ~n, color = ~room_type,
+          hovertemplate = ~paste("County:", county, "<br>", "Accomodation Type:", room_type, "<br>", 
+                                 "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE,  frame = ~county) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title = "What type of accomodation is most common in each county?")
+```
+**Comment:**
+By clicking on different counties, it is possible to see the difference between counties on types of accommodation available.  Dublin has more private rooms available than entire rental units. However, in Galway and Cork, there are more entire rental units available than private rooms. 
+
+```{r warning=FALSE, echo=FALSE}
+df %>%
+  plot_ly(x = ~room_type, y = ~price, color = ~room_type) %>%
+  add_boxplot(frame = ~county, showlegend = FALSE) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Price in Euro",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 450)), 
+         title="What is the price of each type of accomodation for each county?",
+    boxmode = "group") 
+```
+
+**Comment:**
+It is possible to select the same county in the two graphs above and compare. For example, Dublin has more entire rental units than private rooms, entire rental units are more expensive than private rooms. 
+
+
+```{r echo=FALSE, warning=FALSE}
+# creating a dataset of the table above
+sum_month_df <- large_df %>% 
+  select(id, month, county) %>% 
+  group_by(month, county) %>% 
+  #conting distinct AirBnB listing's id
+  summarize(count_distinct = n_distinct(id))
+
+sum_month_df %>%
+  plot_ly(x = ~month, y = ~count_distinct, color = ~month,
+          hovertemplate = ~paste("County:", county, "<br>", "Month:", month, "<br>", 
+                                 "Number of AirBnB listings:", count_distinct)) %>%
+  add_bars(frame = ~county, showlegend = FALSE) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title = "When are the most AirBnB listings Available?")
+```
+**Comment:**
+It is interesting to compare AirBnB listings for each month and county. Big cities like Dublin, Cork, Galway and Limerick, including Kerry, have less AirBnB listings in teh summer. It is unclear why this is the case, considering more tourists come to Ireland during the summer. 
+
+```{r echo=FALSE, warning=FALSE}
+# eamining the number of AirBnB listings available in each month
+large_df %>% 
+  select(id, month, county) %>% 
+  group_by(county,month) %>% 
+  summarize(count_distinct = n_distinct(id))
+```
+**Comment:**
+Tablee examined the number in the graph above. Less AirBnB listings are available in the summer than any other time of the year.
+
+### Conclusion
+The initial examination of the data, shows that there are more AirBnB Listing in Kerry than Dublin. Top 7 county with AirBnB listings  are on the Wild Atlantic Way. The map of Ireland shows the density of the number of listings on the coast. For some reason, there are less AirBnB listings in the summer than the winter. Number of room types differs depedning on the county. Dublin City, Cork City and Galway City,   The county breakdown examination shows no difference in price or mininum nights required to stay regardless of room type. 
+
+
+## RPZ
+```{r echo=FALSE, warning=FALSE}
+# creating a map of Ireland with AirBnB listings in RTZ differentiated 
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(df, lat = ~latitude, lon = ~longitude, color = ~rent_pressure_zone)
+fig <- fig %>% add_markers(marker = list(opacity = 0.2), showlegend=FALSE, colors = pressure_colors,
+                          
+                          hovertemplate = ~paste("LEA:", lea, "<br>", 
+                                        "Council:", council, "<br>",
+                                        "Price (in €):", price, "<br>",
+                                        "Room Type", room_type, "<br>",
+                                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                                        "Availability (in nights)", available_nights, "<br>",
+                                        "RTZ", rent_pressure_zone, "<br>"))
+fig <- fig %>% layout(
+    title = 'Which AirBnB listings are in the RTZs?', geo = g)
+
+fig
+```
+
+**Comment:**
+Map of Ireland represents the density of AirBnB listings, highlighting the areas that are in RTZs (in red). Athough Dublin City, Cork City and Galway City are all in RTZs, it is possible to see the huge amount of AirBnB listings available, which can be affecting the Irish Housing Crisis.  
+
+### Summary of RTZs
+```{r message=FALSE, echo=FALSE}
+# creating a dataframe with rent_pressure_zone and room_type, arranging by count
+df %>% 
+  select(rent_pressure_zone, room_type, price, minimum_nights) %>% 
+  group_by(room_type, rent_pressure_zone) %>% 
+  summarise(count = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights)) 
+```
+
+**Comment:**
+There are more entire rental units and private rooms available outside of RTZs than there are in the RTZs. 
+
+### Breakdown of AirBnB listings by Accomodation Type and RPZ
+```{r echo=FALSE}
+df %>%
+  count(rent_pressure_zone, room_type) %>%
+  mutate(room_type = fct_reorder(room_type, n, .desc = TRUE)) %>%
+  plot_ly(x = ~room_type, y = ~n, color = ~rent_pressure_zone,
+          
+          hovertemplate = ~paste("RTZ:", rent_pressure_zone, "<br>",
+                        "Accomodation Type:", room_type, "<br>", 
+                        "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend=FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title='What Room Types are available <br> inside and outside RTZs?')
+   
+```
+**Comment:**
+Table above is summarised with this graph. There are more entire rental units and private rooms available outside of RTZs than there are in the RTZs. However, this could be due to fact that there are more houses in general outside the RTZs than inside the RTZs, which would show more AirBnB listings outside RTZs than inside RTZs.
+
+### Breakdown of Price by: Room Type and non-/RTZ
+```{r warning=FALSE, echo=FALSE}
+df %>%
+  plot_ly(x = ~room_type, y = ~price, color = ~rent_pressure_zone) %>%
+  add_boxplot(marker = list(opacity = 0.2), showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Price in Euro",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 450)), 
+         title="What rooom type is cheaper <br> inside or outside of RTZs",
+    boxmode = "group") 
+   
+```
+**Comment:**
+Although, there is a difference between entire rental unit and private/shared room on price, there is no big difference between renting private/shared room inside or outside the RTZ. However, an entire rental unit is slightly more expensive in RTZs than outside RTZs. 
+
+
+```{r echo=FALSE, warning=FALSE}
+# eamining the number of AirBnB listings available in each month
+large_df %>% 
+  select(id, month, rent_pressure_zone) %>% 
+  group_by(month, rent_pressure_zone) %>% 
+  summarize(count_distinct = n_distinct(id))
+```
+**Comment:**
+In the table above, number of listings is summarised by RTZ and month. 
+
+```{r echo=FALSE, warning=FALSE}
+# creating a dataset of the table above
+sum_rpz_df <- large_df %>% 
+  select(id, month, rent_pressure_zone) %>% 
+  group_by(month, rent_pressure_zone) %>% 
+  #conting distinct AirBnB listing's id
+  summarize(count_distinct = n_distinct(id))
+
+sum_rpz_df %>%
+  plot_ly(x = ~month, y = ~count_distinct, color = ~rent_pressure_zone,
+          hovertemplate = ~paste("Month:", month, "<br>", 
+                                 "RTZ:", rent_pressure_zone , "<br>", 
+                                 "Number of AirBnB listings:", count_distinct)) %>%
+  add_bars(frame = ~rent_pressure_zone, showlegend = FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title = "When are the most AirBnB listings Available <br> in RTZ?")
+```
+**Comment:**
+In the graph above visusalises the table above. As seen above, there are overall less AirBnB listings in RTZs than in Non-RTZs. Furthermore, the trend follows for the month: less AirBnBs are available during the summer than in the winter. 
+
+### RPZ: Conclusion
+Map of Ireland shows that there are a lot of AirBnB listings in RTZs, which would affect the number of accommodation available for the housing market, to buy or to rent. There are as many entire rental units as private rooms in RTZs. There are more entire rental units outside of RTZs because there are more areas not in RTZs than there are in RTZs. At first glance, due to the amount of AirBnB listings in RTZs, it could be argued to the government that it could potentially reduce the pressure on the Irish housing market and reduce the Housing Crisis in RTZs.  
+
+## Entire Rental Unit
+A new dataset was created where AirBnB listings were selected that offered entire rental unit.  This new dataset was used for this section of the report.  
+```{r echo=FALSE}
+# create new dataset where filtered by 'Entire rental unit'
+entire <-  df %>% 
+  filter(room_type =='Entire rental unit')
+```
+
+
+```{r echo=FALSE, warning=FALSE}
+# creating a map of Ireland with AirBnB listings in RTZ differentiated 
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(entire, lat = ~latitude, lon = ~longitude, color = ~rent_pressure_zone)
+fig <- fig %>% add_markers(marker = list(opacity = 0.2), showlegend=FALSE, colors = pressure_colors,
+                          
+                          hovertemplate = ~paste("LEA:", lea, "<br>", 
+                                        "Council:", council, "<br>",
+                                        "Price (in €):", price, "<br>",
+                                        "Room Type", room_type, "<br>",
+                                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                                        "Availability (in nights)", available_nights, "<br>",
+                                        "RTZ", rent_pressure_zone, "<br>"))
+fig <- fig %>% layout(
+    title = 'Where are Entire Rental Units in the RTZs?', geo = g)
+
+fig
+```
+
+
+### Summary of Entire Rental Units
+```{r echo=FALSE}
+# examining the mean and the max or price for each county for Entire House
+entire %>% 
+  select(county, price, minimum_nights) %>% 
+  group_by(county) %>% 
+  summarise(no_of_listings_entire_house_apt = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights)) %>% 
+  arrange(desc(no_of_listings_entire_house_apt))
+
+```
+
+
+### Entire Rental Units by County
+```{r echo=FALSE, fig.align = 'center',  warning=FALSE, message=FALSE}
+entire %>%
+  count(county) %>%
+  mutate(county = fct_reorder(county, n, .desc = TRUE)) %>%
+  plot_ly(x = ~county, y = ~n, color = ~county,
+          hovertemplate = ~paste("County:", county, "<br>", 
+                                 "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"), 
+         barmode = 'stack',
+         title='Where are the most AirBnB Listings of Entire Rental Units?')
+```
+**Comment:**
+Kerry and Donegal have more entire rental units than other counties. Dublin is only 5th highest, while Cork and Galway are in 3rd and 4th place.
+
+### Summary of Entire Rental Units by Counties
+```{r warning=FALSE, echo=FALSE}
+# examining the mean and the max or price for each county 
+entire %>% 
+  select(county) %>% 
+  group_by(county) %>% 
+  summarise(no_of_listings_entire_rental_unit = n()) %>% 
+  arrange(desc(no_of_listings_entire_rental_unit))
+
+```
+
+### Counties by RTZs
+```{r echo=FALSE}
+entire %>%
+  select(rent_pressure_zone, county) %>% 
+  count(county, rent_pressure_zone) %>%
+  mutate(county = fct_reorder(county, n, .desc = TRUE)) %>%
+  plot_ly(x = ~county, y = ~n, color = ~rent_pressure_zone,
+          hovertemplate = ~paste("County:", county, "<br>", "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"), 
+         barmode = 'stack',
+         title='What counties have the entire rental units in RTZs?')
+```
+**Comment:**
+When Kerry was examined, 326 AirBnB listings are in the RTZ, while the rest is outside the RTZ. Both County Galway and County Cork have AirBnB listings in RTZ and outside of it.  All Dublin City AirBnBlistings, Cork City AirBnB listings and Galway City AirBnB listings is in the RTZ.  
+
+### Summary of Counties by RTZs
+```{r warning=FALSE, echo=FALSE}
+# examining the mean and the max or price for each county and rent_pressure_zone
+entire %>% 
+  select(county, rent_pressure_zone, price) %>% 
+  group_by(county, rent_pressure_zone) %>% 
+  summarise(no_of_listings_entire_rental_unit = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price)) %>% 
+  arrange(desc(mean_price))
+
+```
+
+### Price by County and RPZ
+```{r warning=FALSE, echo=FALSE}
+entire %>%
+  plot_ly(x = ~rent_pressure_zone, y = ~price, color = ~rent_pressure_zone) %>%
+  add_boxplot(frame = ~county,showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Price in Euro",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 450)), 
+         title="Where is the Cheapest Entire Rental Unit on AirBnB <br> based on County and RPZ?",
+    boxmode = "group") 
+```
+
+### Mininum Nights by County and RPZ
+```{r warning=FALSE, echo=FALSE}
+entire %>%
+  plot_ly(x = ~rent_pressure_zone, y = ~minimum_nights, color = ~rent_pressure_zone) %>%
+  add_boxplot(frame = ~county,showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Mininum Nights per Stay",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 15)),
+    title='What is the Shortest Possible Stay for Entire Rental Unit on AirBnB <br> based on County and RPZ?')
+```
+
+
+### Availability
+
+```{r echo=FALSE, warning=FALSE}
+# creating a map of Ireland with AirBnB entire rental units listings in RTZ 
+
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(entire, lat = ~latitude, lon = ~longitude, color = ~available_nights)
+fig <- fig %>% add_markers(marker = list(opacity = 0.4), 
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_year_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'What is the availability for each AirBnB listing?', geo = g)
+
+fig
+```
+**Comment:**  
+It is visible that a lot of properties are not available all year around. Unfortunately, no reason is provided why the property is unavailable. 
+
+### Time of Year by RTZs
+```{r echo=FALSE}
+# create new dataset where filtered by 'Entire rental unit'
+entire_large_df <-  large_df %>% 
+  filter(room_type =='Entire rental unit')
+```
+
+```{r echo=FALSE, warning=FALSE}
+# eamining the number of AirBnB listings available in each month
+entire_large_df %>% 
+  select(id, month, rent_pressure_zone) %>% 
+  group_by(month, rent_pressure_zone) %>% 
+  summarize(count_distinct = n_distinct(id))
+```
+**Comment:**
+In the table above, number of listings of entire rental units is summarised by RTZ and month. 
+
+```{r echo=FALSE, warning=FALSE}
+# creating a dataset of the table above
+entire_sum_rpz_df <- entire_large_df %>% 
+  select(id, month, rent_pressure_zone) %>% 
+  group_by(month, rent_pressure_zone) %>% 
+  #conting distinct AirBnB listing's id
+  summarize(count_distinct = n_distinct(id))
+
+entire_sum_rpz_df %>%
+  plot_ly(x = ~month, y = ~count_distinct, color = ~rent_pressure_zone,
+          hovertemplate = ~paste("Month:", month, "<br>", 
+                                 "RTZ:", rent_pressure_zone , "<br>", 
+                                 "Number of AirBnB listings:", count_distinct)) %>%
+  add_bars(frame = ~rent_pressure_zone, showlegend = FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title = "When are the most Entire Rental Units AirBnB listings Available <br> in RTZ?")
+```
+**Comment:**  
+This graph shows less entire rental units available during summer months in RTZs and Non-RTZs. It is still unclear why. 
+
+### Profitablity PER DAY
+```{r echo=FALSE, warning=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(entire, lat = ~latitude, lon = ~longitude, color = ~per_day_rent_AirBnB)
+fig <- fig %>% add_markers(marker = list(opacity = 0.4),colors = rent_colors,
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_day_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'Which Entire Rental Units should be rented out? <br> Profitability PER DAY', geo = g)
+
+fig
+```
+**Comment:**
+When comparing daily rent rate and daily AirBnB, for most properties, it is more profitable to AirBnB.
+
+```{r message=FALSE, echo=FALSE}
+entire %>% 
+  select(rent_pressure_zone, per_day_rent_AirBnB, minimum_nights, price) %>% 
+  group_by(rent_pressure_zone, per_day_rent_AirBnB) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights))
+  
+```
+**Comment:**
+The table above the shows the breakdown of which entire rental units should be rented out or  leased out as AirBnB, when only the daily price and daily rent rate is to be considered. 
+
+### Profitablity PER YEAR
+```{r echo=FALSE, warning=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(entire, lat = ~latitude, lon = ~longitude, color = ~per_year_rent_AirBnB)
+fig <- fig %>% add_markers(marker = list(opacity = 0.4),colors = rent_colors,
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", total_income, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_year_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'Which Entire Rental Units should be rented out? <br> Profitability PER YEAR', geo = g)
+
+fig
+```
+**Comment:**
+However, when comparing total potential income (available nights * price) and annual income (rent_in_ireland.csv  * 12), it seems that most landlords are missing out on the potential annual rent. THis could be due to the fact that the rental unit is not available all year around. 
+
+```{r message=FALSE, echo=FALSE}
+entire %>% 
+  select(rent_pressure_zone, per_year_rent_AirBnB, minimum_nights, price, total_income) %>% 
+  group_by(rent_pressure_zone, per_year_rent_AirBnB) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(total_income), 
+            median_price = median(total_income), 
+            mean_price = mean(total_income),
+            max_price = max(total_income))
+  
+```
+**Comment:**
+The table above the shows the breakdown of which entire rental units should be rented out or  leased out as AirBnB, when only the daily price and daily rent rate is to be considered. 
+
+### Threshold Examinination
+As previously stated, homeowners in RTZs (RPZs) are required to apply for planning permission if they let out their entire home (principal private residence) for short-term lets of more than 90 days in total while they are away. Principal private residence is the place where one ordinarily live.
+
+```{r echo=FALSE}
+entire %>%
+  count(rent_pressure_zone, threshold_day_90, planning_permission) %>%
+  mutate(threshold_day_90 = fct_reorder(threshold_day_90, n, .desc = TRUE)) %>%
+  plot_ly(x = ~threshold_day_90, y = ~n, color = ~rent_pressure_zone,
+          
+          hovertemplate = ~paste("RTZ:", rent_pressure_zone, "<br>",
+                        "Threshhold:", threshold_day_90, "<br>", 
+                        "Number of AirBnB listings:", n,"<br>", 
+                        "Planning Required:", planning_permission)) %>%
+  add_bars(showlegend=FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title='AirBnB listings by Threshold and RTZ')
+   
+```
+**Comment:**
+There are very small amount of properties in the Rent Pressures Zones that are over 90 day threshold that would require planning permission. 
+
+```{r message=FALSE, echo=FALSE}
+entire %>% 
+  select(rent_pressure_zone, threshold_day_90,planning_permission, minimum_nights, price) %>% 
+  group_by(rent_pressure_zone, threshold_day_90, planning_permission) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights))
+  
+```
+**Comment:**
+Summary of the graph above, there are very small amount of properties in the Rent Pressures Zones that are over 90 day threshold that would require planning permission. 
+
+### Stay Duration
+```{r echo=FALSE}
+entire %>%
+  count(rent_pressure_zone, term) %>%
+  mutate(term = fct_reorder(term, n, .desc = TRUE)) %>%
+  plot_ly(x = ~term, y = ~n, color = ~rent_pressure_zone,
+          
+          hovertemplate = ~paste("RTZ:", rent_pressure_zone, "<br>",
+                        "Term:", term, "<br>", 
+                        "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend=FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title='AirBnB listings by Lease Term and RTZ')
+   
+```
+
+```{r message=FALSE, echo=FALSE}
+entire %>% 
+  select(rent_pressure_zone, term, minimum_nights, price) %>% 
+  group_by(rent_pressure_zone, term) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights))
+  
+```
+
+### Term by RTZs
+```{r warning=FALSE, echo=FALSE}
+
+ entire %>%
+  plot_ly(x = ~term, y = ~price, color = ~rent_pressure_zone) %>%
+  add_boxplot(showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Price in Euro",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 450)), 
+         title="Entire Rental Unit AirBnB listings by Term and RTZ",
+    boxmode = "group") 
+
+```
+**Comment:**
+Entire rental units available in RTZs are more expensive than outside of RTZs. There is a slight difference between price between short-term lease and long-term lease.    
+
+### Mininum Nights by Term and RTZs
+```{r warning=FALSE, echo=FALSE}
+
+entire %>%
+  plot_ly(x = ~term, y = ~minimum_nights, color = ~rent_pressure_zone) %>%
+  add_boxplot(showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Mininum Nights per Stay",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         title="Mininum Nights for Entire Rental Unit AirBnB listings <br> by Term and RTZ",
+         range = list(0, 100)),
+    boxmode = "group") 
+
+``` 
+**Comment:**
+There seems to be a difference in mininum nights to stay in Entire rental units available in RTZs are more expensive than outside of RTZs. Short-term lease is up to 15 days, so that is why is very small window of stay. 
+
+### Entire Rental Unit: Conclusion 
+There is more entire rental units in Kerry than in other places in Ireland. When availability was examined, it was clear that not all entire rental units were available all year around. When examining the months of year, it is clear that there are less entire rental units available in the summer than other times of the year. It is unclear why this occurs and what is the landlord's motivation behind this. Majority of stays of entire rental units are available for short-term stays (mininum nights under 14 days) and availability for the year is below 90 days. In RTZs, there are only 2,356 properties that require planning permission (availability over 90 days in the year and in RTZs). This would mean that there are over 2,000 properties that could be placed into long-term rental market to ease the Housing Crisis in Ireland. Analysis of potential income from rent vs AirBnB shows that most of the AirBnB earn less than the potential rental annual income. Of course, this is because most entire rental units on AirBnB are not available all year around, motivation for this is unclear.
+
+## Private Room
+A new dataset was created where AirBnB listings were selected that offered private rooms in a shared house. This new dataset was used for this section of the report.  
+```{r echo=FALSE}
+# create new dataset where filtered by 'Private Room'
+private_room <-  df %>% 
+  filter(room_type =='Private room')
+
+```
+
+```{r echo=FALSE, warning=FALSE}
+# creating a map of Ireland with AirBnB listings in RTZ differentiated 
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(private_room, lat = ~latitude, lon = ~longitude, color = ~rent_pressure_zone)
+fig <- fig %>% add_markers(marker = list(opacity = 0.2), showlegend=FALSE, colors = pressure_colors,
+                          
+                          hovertemplate = ~paste("LEA:", lea, "<br>", 
+                                        "Council:", council, "<br>",
+                                        "Price (in €):", price, "<br>",
+                                        "Room Type", room_type, "<br>",
+                                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                                        "Availability (in nights)", available_nights, "<br>",
+                                        "RTZ", rent_pressure_zone, "<br>"))
+fig <- fig %>% layout(
+    title = 'Where are Private Rooms in the RTZs?', geo = g)
+
+fig
+```
+
+### Summary of Private Rooms
+```{r echo=FALSE}
+# examining the mean and the max or price for each county for Entire House
+private_room %>% 
+  select(county, price, minimum_nights) %>% 
+  group_by(county) %>% 
+  summarise(no_of_listings_private_room = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights)) %>% 
+  arrange(desc(no_of_listings_private_room))
+
+```
+
+### Private Rooms by County
+```{r echo=FALSE, fig.align = 'center',  warning=FALSE, message=FALSE}
+private_room %>%
+  count(county) %>%
+  mutate(county = fct_reorder(county, n, .desc = TRUE)) %>%
+  plot_ly(x = ~county, y = ~n, color = ~county,
+          hovertemplate = ~paste("County:", county, "<br>", 
+                                 "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"), 
+         barmode = 'stack',
+         title='Where are the most AirBnB Listings of Private Rooms?')
+```
+
+```{r warning=FALSE, echo=FALSE}
+# examining the mean and the max or price for each county 
+private_room %>% 
+  select(county) %>% 
+  group_by(county) %>% 
+  summarise(no_of_listings_entire_rental_unit = n()) %>% 
+  arrange(desc(no_of_listings_entire_rental_unit))
+
+```
+
+### Breakdown of Private Room AirBnB listings by County and RPZ
+```{r echo=FALSE}
+private_room %>%
+  count(rent_pressure_zone, county) %>%
+  mutate(county = fct_reorder(county, n, .desc = TRUE)) %>%
+  plot_ly(x = ~county, y = ~n, color = ~rent_pressure_zone,
+          hovertemplate = ~paste("County:", county, "<br>", 
+                                 "RTZ:", rent_pressure_zone, "<br>",
+                                 "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"), 
+         barmode = 'stack',
+         title='Private Room AirBnB listings by County and RPZ')
+```
+**Comment:**
+Dublin has the most number of private rooms available, all of which are in the RTZ. However, the next three in the RTZ are: Kerry, Cork City and Galway City. 
+
+### Price by RPZ and County
+```{r warning=FALSE, echo=FALSE}
+private_room %>%
+  plot_ly(x = ~rent_pressure_zone, y = ~price, color = ~rent_pressure_zone) %>%
+  add_boxplot(frame = ~county,showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Price in Euro",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 450)), 
+         title="Breakdown of Price of Private Room AirBnB listings by RPZ and County",
+    boxmode = "group") 
+```
+**Comment:**
+There are no visible difference between prices of private room AirBnB listings regardless of whether the AirBnB is in RTZ or County.
+
+### Minimum Nights by RPZ and County
+```{r warning=FALSE, echo=FALSE}
+private_room %>%
+  plot_ly(x = ~rent_pressure_zone, y = ~minimum_nights, color = ~rent_pressure_zone) %>%
+  add_boxplot(frame = ~county,showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Mininum Nights per Stay",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         itle="Breakdown of Mininum Nights of Private Room AirBnB listings by RPZ and County",
+         range = list(0, 15)))
+```
+**Comment:**
+There are no visible difference between minimum nights required to stay in private room AirBnB listings regardless of whether the AirBnB is in RTZ or County.
+
+### Profitability PER DAY
+```{r echo=FALSE, warning=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(private_room, lat = ~latitude, lon = ~longitude, color = ~per_day_rent_AirBnB)
+fig <- fig %>% add_markers(marker = list(opacity = 0.4), showlegend = FALSE, colors = rent_colors,
+                
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_day_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'Which Private Rooms should be rented out?', geo = g)
+
+fig
+```
+**Comment:**
+When comparing daily rent rate and daily AirBnB, for most properties, it is more profitable to AirBnB.
+
+```{r message=FALSE, echo=FALSE}
+private_room %>% 
+  select(rent_pressure_zone, per_day_rent_AirBnB, minimum_nights, price) %>% 
+  group_by(per_day_rent_AirBnB, rent_pressure_zone) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights))
+  
+```
+
+### Profitability PER YEAR
+```{r echo=FALSE, warning=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(private_room, lat = ~latitude, lon = ~longitude, color = ~per_year_rent_AirBnB)
+fig <- fig %>% add_markers(marker = list(opacity = 0.4), showlegend = FALSE, colors = rent_colors,
+                
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_year_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'Which Private Rooms should be rented out?', geo = g)
+
+fig
+```
+**Comment:**
+However, when comparing total potential income (available nights * price) and annual income (rent_in_ireland.csv  * 12), it seems that most landlords are missing out on the potential annual rent. THis could be due to the fact that the rental unit is not available all year around. 
+
+```{r message=FALSE, echo=FALSE}
+private_room %>% 
+  select(rent_pressure_zone, per_year_rent_AirBnB, minimum_nights, price) %>% 
+  group_by(per_year_rent_AirBnB, rent_pressure_zone) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights))
+  
+```
+
+### Availability
+```{r echo=FALSE, warning=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(private_room, lat = ~latitude, lon = ~longitude, color = ~available_nights)
+fig <- fig %>% add_markers(marker = list(opacity = 0.4),
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_year_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'Availability for Private Room', geo = g)
+
+fig
+```
+**Comment:**
+Above Map of Ireland, shows the availability of private rooms. It seems that there are a lot of private rooms that are not available all year around.  
+
+
+### Time of Year by RTZs 
+```{r echo=FALSE}
+# create new dataset where filtered by 'Entire rental unit'
+private_large_df <-  large_df %>% 
+  filter(room_type =='Private room')
+```
+
+```{r echo=FALSE, warning=FALSE}
+# creating a dataset of the table above
+private_sum_rpz_df <- private_large_df %>% 
+  select(id, month, rent_pressure_zone) %>% 
+  group_by(month, rent_pressure_zone) %>% 
+  #conting distinct AirBnB listing's id
+  summarize(count_distinct = n_distinct(id))
+
+private_sum_rpz_df %>%
+  plot_ly(x = ~month, y = ~count_distinct, color = ~rent_pressure_zone,
+          hovertemplate = ~paste("Month:", month, "<br>", 
+                                 "RTZ:", rent_pressure_zone , "<br>", 
+                                 "Number of AirBnB listings:", count_distinct)) %>%
+  add_bars(frame = ~rent_pressure_zone, showlegend = FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+        yaxis = list(title = "Number of AirBnB listings"),
+        title = "When are the most Private Room AirBnB listings Available <br> in RTZs?")
+```
+**Comment:**
+The graph above shows that regardless of RTZs, there are still less availability during the summer than winter. 
+
+```{r echo=FALSE, warning=FALSE}
+# eamining the number of AirBnB listings available in each month
+private_large_df %>% 
+  select(id, month, rent_pressure_zone) %>% 
+  group_by(month, rent_pressure_zone) %>% 
+  summarize(count_distinct = n_distinct(id))
+```
+**Comment:**
+In the table above, number of listings of private rooms is summarised by RTZ and month. A table of above illustration. 
+
+### Private Room by RTZ and Threshold (under/over 90 days)
+As previously stated, homeowners in RTZs (RPZs) are required to apply for planning permission if they let out their entire home (principal private residence) for short-term lets of more than 90 days in total while they are away. Principal private residence is the place where one ordinarily live. However, there is no threshold for private rooms. It is still interesting to examine this relationship
+
+```{r echo=FALSE}
+private_room %>%
+  count(rent_pressure_zone, threshold_day_90) %>%
+  mutate(threshold_day_90 = fct_reorder(threshold_day_90, n, .desc = TRUE)) %>%
+  plot_ly(x = ~threshold_day_90, y = ~n, color = ~rent_pressure_zone,
+          
+          hovertemplate = ~paste("RTZ:", rent_pressure_zone, "<br>",
+                        "Threshhold:", threshold_day_90, "<br>", 
+                        "Number of AirBnB listings:", n,"<br>")) %>%
+  add_bars(showlegend=FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title='AirBnB listings by Threshold and RTZ')
+   
+```
+**Comment:**
+There are 2,124 private rooms that are available over 90 days in RTZs. If the same rules were applied to private rooms as entire rental units, then these properties would require planning permission. 
+
+### Stay Duration
+```{r echo=FALSE}
+private_room %>%
+  count(rent_pressure_zone, term) %>%
+  mutate(term = fct_reorder(term, n, .desc = TRUE)) %>%
+  plot_ly(x = ~term, y = ~n, color = ~rent_pressure_zone,
+          
+          hovertemplate = ~paste("RTZ:", rent_pressure_zone, "<br>",
+                        "Term:", term, "<br>", 
+                        "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend=FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title='Private Room AirBnB listings <br> by Lease Term and RTZ')
+   
+```
+
+```{r message=FALSE, echo=FALSE}
+private_room %>% 
+  select(rent_pressure_zone, term, minimum_nights, price) %>% 
+  group_by(rent_pressure_zone, term) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights))
+  
+```
+
+### Price by Term and RTZs
+```{r warning=FALSE, echo=FALSE}
+
+private_room %>%
+  plot_ly(x = ~term, y = ~price, color = ~rent_pressure_zone) %>%
+  add_boxplot(showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Price in Euro",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 450)), 
+         title="What Private Room are cheaper: by Term and RTZs?",
+    boxmode = "group") 
+
+```
+**Comment:**
+There are absolutely no difference between private room listings inside and outside RTZs and term type (under/over-90). This means that regardless of nights stayed in RTZs, the price is very similar. 
+
+### Private Room: Conclusion
+In a lot of counties, there are as many private rooms as there are entire rental units. Dublin has the most number of private rooms, all of which are in the RTZ.
+There are no planning permission required for long-term stays in RTZs with availability for over-90 days. In RTZs, there are only 3,011 private rooms available on AirBnB, while there are 3,152 private rooms outside RTZs. Most of the properties in Rent Pressure could be placed into long-term rental market to ease the Housing Crisis in Ireland. Analysis of potential income from rent vs AirBnB shows that most of the AirBnB earn less than the potential rental annual income. Of course, this is because most entire rental units on AirBnB are not available all year around, motivation for this is unclear.
+
+
+There are 2,124 private rooms that are available over 90 days in RTZs. If the same rules were applied to private rooms as entire rental units, then these properties would require planning permission. Identifying this should help lobbyists of change to regulations to include private rooms in their cut-offs.  
+
+## Shared Room
+A new dataset was created where AirBnB listings were selected that offered shared room in a shared house.  This new dataset was used for this section of the report.  
+```{r echo=FALSE}
+# create new dataset where filtered by 'Shared room'
+shared_room <-  df %>% 
+  filter(room_type =='Shared room')
+```
+
+```{r echo=FALSE, warning=FALSE}
+# creating a map of Ireland with AirBnB listings in RTZ differentiated 
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(shared_room, lat = ~latitude, lon = ~longitude, color = ~rent_pressure_zone)
+fig <- fig %>% add_markers(marker = list(opacity = 0.2), showlegend=FALSE, colors = pressure_colors,
+                          hovertemplate = ~paste("LEA:", lea, "<br>", 
+                                        "Council:", council, "<br>",
+                                        "Price (in €):", price, "<br>",
+                                        "Room Type", room_type, "<br>",
+                                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                                        "Availability (in nights)", available_nights, "<br>",
+                                        "RTZ", rent_pressure_zone, "<br>"))
+fig <- fig %>% layout(
+    title = 'Where are Shared Rooms in the RTZs?', geo = g)
+
+fig
+```
+
+### Summary of Shared Rooms
+```{r echo=FALSE}
+# examining the mean and the max or price for each county for Entire House
+shared_room %>% 
+  select(county, price, minimum_nights) %>% 
+  group_by(county) %>% 
+  summarise(no_of_listings_shared_room = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights)) %>% 
+  arrange(desc(no_of_listings_shared_room))
+
+```
+
+```{r warning=FALSE, echo=FALSE}
+
+shared_room %>%
+  count(county, rent_pressure_zone) %>%
+  mutate(county = fct_reorder(county, n, .desc = TRUE)) %>%
+  plot_ly(x = ~county, y = ~n, color = ~rent_pressure_zone,
+          
+          hovertemplate = ~paste("County:", county, "<br>", 
+                                 "RTZ:", rent_pressure_zone, "<br>",
+                                 "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         barmode = 'stack')
+
+```
+**Comment:**
+There are very few shared room in most areas.
+
+### Price by RPZ
+```{r warning=FALSE, echo=FALSE}
+shared_room %>%
+  plot_ly(x = ~rent_pressure_zone, y = ~price, color = ~rent_pressure_zone) %>%
+  add_boxplot(showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Price in Euro",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 450)), 
+         title="AirBnB listings of Entire Rental Unit",
+    boxmode = "group") 
+```
+**Comment:**
+Bah
+
+### Minimum Nights by RPZ
+```{r warning=FALSE, echo=FALSE}
+shared_room %>%
+  plot_ly(x = ~rent_pressure_zone, y = ~minimum_nights, color = ~rent_pressure_zone) %>%
+  add_boxplot(showlegend = FALSE, colors = pressure_colors) %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Mininum Nights per Stay",
+         zerolinecolor = '#ffff',
+         zerolinewidth = 2,
+         gridcolor = 'ffff',
+         range = list(0, 15)))
+```
+**Comment:**
+Bah
+
+### Profit PER DAY
+```{r echo=FALSE, warning=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(shared_room, lat = ~latitude, lon = ~longitude, color = ~per_day_rent_AirBnB )
+fig <- fig %>% add_markers(colors= rent_colors,
+                marker = list(opacity = 0.2), 
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_day_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'AirBnB listings of Shared Room', geo = g)
+
+fig
+```
+**Comment:**
+Shared rooms are earning their owners very profitable when potential daily rate from AirBnB and rent is compared.
+
+```{r message=FALSE, echo=FALSE}
+shared_room %>% 
+  select(rent_pressure_zone, per_day_rent_AirBnB, minimum_nights, price) %>% 
+  group_by(rent_pressure_zone, per_day_rent_AirBnB) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights))
+  
+```
+
+### Profit PER YEAR
+```{r echo=FALSE, warning=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(shared_room, lat = ~latitude, lon = ~longitude, color = ~per_year_rent_AirBnB )
+fig <- fig %>% add_markers(showlegend = FALSE, colors= rent_colors,
+                marker = list(opacity = 0.2), 
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_year_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'AirBnB listings of Shared Room', geo = g)
+
+fig
+```
+**Comment:**
+However, when the potential income from AirBnB and rent is compared, shared rooms are earning their owners less than the annual rate for rent. 
+
+```{r message=FALSE, echo=FALSE}
+shared_room %>% 
+  select(rent_pressure_zone, per_year_rent_AirBnB, minimum_nights, price) %>% 
+  group_by(rent_pressure_zone, per_year_rent_AirBnB) %>% 
+  summarise(no_of_listings = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights))
+  
+```
+
+### Availability
+```{r echo=FALSE, warning=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(shared_room, lat = ~latitude, lon = ~longitude, color = ~available_nights)
+fig <- fig %>% add_markers(marker = list(opacity = 0.4),colors=reverse_viridis,
+                hovertemplate = ~paste("County:", county, "<br>", 
+                        "Price (in €):", price, "<br>",
+                        "Room Type", room_type, "<br>",
+                        "Mininum stay (in nights)", minimum_nights, "<br>",
+                        "Availability (in nights)", available_nights, "<br>",
+                        "To Rent or To Buy:",per_year_rent_AirBnB))
+fig <- fig %>% layout(
+    title = 'Availability for Shared Room', geo = g)
+
+fig
+```
+**Comment:**
+Shared rooms are available all year around. Very small amount of shared rooms are available for less than 100 days.   
+
+### Time of Year by RTZs
+```{r echo=FALSE}
+# create new dataset where filtered by 'Entire rental unit'
+shared_large_df <-  large_df %>% 
+  filter(room_type =='Shared room')
+```
+
+```{r echo=FALSE, warning=FALSE}
+# creating a dataset of the table above
+shared_sum_rpz_df <- shared_large_df %>% 
+  select(id, month, rent_pressure_zone) %>% 
+  group_by(month, rent_pressure_zone) %>% 
+  #conting distinct AirBnB listing's id
+  summarize(count_distinct = n_distinct(id))
+
+shared_sum_rpz_df %>%
+  plot_ly(x = ~month, y = ~count_distinct, color = ~rent_pressure_zone,
+          hovertemplate = ~paste("Month:", month, "<br>", 
+                                 "RTZ:", rent_pressure_zone , "<br>", 
+                                 "Number of AirBnB listings:", count_distinct)) %>%
+  add_bars(frame = ~rent_pressure_zone, showlegend = FALSE, colors = pressure_colors) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+         title = "When are the most Entire Rental Units AirBnB listings Available <br> in RTZ?")
+```
+**Comment:**  
+This graph shows less shared rooms available during summer months in RTZs. There is no big difference between availability of shared rooms in Non-RTZs regardless of year. For the first time, there are more shared rooms in RTZs than Non-RTZs. This is probably because tourists in RTZs would be willing to share a room to reduce costs while travelling. 
+
+```{r echo=FALSE, warning=FALSE}
+# eamining the number of AirBnB listings available in each month
+shared_large_df %>% 
+  select(id, month, rent_pressure_zone) %>% 
+  group_by(month, rent_pressure_zone) %>% 
+  summarize(count_distinct = n_distinct(id))
+```
+**Comment:**
+In the table above, number of listings of entire rental units is summarised by RTZ and month. 
+
+### Shared Room: Conclusion
+There are only 119 shared rooms available spread out all over Ireland. In major cities, such as Dublin City, Cork City and Galway City, these shared rooms can be used by students going to college in those cities. It is unclear why there would be shared rooms in other counties, where there is no major shortage of accomodation.
+
+## Top 5 Hosts with the most listings on AirBnB in RTZs
+A new dataset was created where 5 AirBnB hosts with the most properties were selected.  This new dataset was used for this section of the report.  
+
+### Summary of Top AirBnB Hosts
+```{r echo=FALSE}
+# displaying the hosts with the most listings on AirBnB
+df %>% 
+  select(rent_pressure_zone, host_id, host_name, price,minimum_nights) %>% 
+  filter(rent_pressure_zone == 'RPZ') %>% 
+  group_by(host_id, host_name) %>% 
+  summarise(count = n(),
+            min_price = min(price), 
+            median_price = median(price), 
+            mean_price = mean(price),
+            max_price = max(price),
+            min_nights = min(minimum_nights), 
+            median_min_nights = median(minimum_nights),
+            mean_min_nights = mean(minimum_nights),
+            max_min_nights = max(minimum_nights)) %>% 
+  arrange(desc(count)) 
+```
+**Comment:**
+Table above examines the AirBnB listings by counting the number of listings in RTZs for each host, ordering it in ascending order. One hosts has over 200 AirBnB listings. 
+
+```{r message=FALSE, echo=FALSE}
+# creating a dataframe with host_id and count, arranging by count
+rpz_top_hosts <-  df %>% 
+  select(rent_pressure_zone, host_id, host_name) %>% 
+  filter(rent_pressure_zone == 'RPZ') %>% 
+  group_by(host_id) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  # get all hosts with more than 10 properties on AirBnB
+  filter( count > 10)
+```
+
+```{r echo=FALSE}
+
+rpz_df <-  df %>% 
+  filter(rent_pressure_zone == 'RPZ')
+
+# creating a list of the top 5 hosts using host_id
+rpz_top_hosts_list <- c(rpz_top_hosts$host_id)
+
+# creating a new dataframe that only selects host_in in Top 20 hosts
+rpz_top_df <- rpz_df %>% 
+  filter(host_id %in% rpz_top_hosts_list)
+```
+
+### Location of Properties owned by Top AirBnB listings
+```{r warning=FALSE, echo=FALSE}
+# geo styling
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+fig <- plot_geo(rpz_top_df, lat = ~latitude, lon = ~longitude, color = ~host_name)
+fig <- fig %>% add_markers(
+                            hovertemplate = ~paste("Host ID:", host_id, "<br>", 
+                                                   "Host Name:", host_name, "<br>", 
+                                                   "County:", county, "<br>", 
+                                                  "Price (in €):", price, "<br>",
+                                                  "Room Type", room_type, "<br>",
+                                                  "RTZs", rent_pressure_zone, "<br>",
+                                                  "Mininum stay (in nights)", minimum_nights, "<br>",
+                                                  "Availability (in nights)", available_nights, "<br>"))
+fig <- fig %>% layout(
+    title = 'Top Hosts with the Most AirBnB listings in RTZ', geo = g)
+
+fig
+```
+**Comment:**
+Map of Ireland examines the location of AirBnB listings in RTZs for those Top hosts.  By double clicking on the id in the legend, it possible to just select one host and examine the location of their AirBnBs in RTZs. Some hosts has several AirBnB listings in different counties. It is unclear how they manage their properties for AirBnB.  
+
+### Room Type in Top Hosts in RTZs by County
+```{r warning=FALSE, echo=FALSE}
+rpz_top_df %>%
+  count(room_type, county) %>%
+  mutate(room_type = fct_reorder(room_type, n, .desc = TRUE)) %>%
+  plot_ly(x = ~county, y = ~n, color = ~county,
+          hovertemplate = ~paste("Accomodation Type:", room_type, "<br>", 
+                                 "County:", county, "<br>", 
+                                 "Number of AirBnB listings:", n)) %>%
+  add_bars(showlegend = FALSE,  frame = ~room_type) %>%
+  layout(xaxis = list(title = FALSE),
+          yaxis = list(title = "Number of AirBnB listings"),
+          title = "What is the breakdown by Top Hosts properties in RTZ <br> by room type and County?")
+```
+**Comment:**
+Dublin City has the most AirBnB hosts with properties regardless of room type. There are also more private rooms than entire rental units. Galway City and Cork City also have hosts that have many AirBnB listings. However, there are more entire rental units than private rooms in those cities.
+
+### Top Hosts: Conclusion
+There are individuals who hold a lot of property in RTZs. It is unclear how those individuals manage their properties around Ireland. It could be suggested that having too many properties on AirBnB should be part of planning permission. This would allow landlords to have constant tenants and not worry about managing their AirBnB properties around Ireland.  
+
+# Data Sources
+Lyons, R. (2021) *Irish Rental Report Q2 2021.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 17 December 2021).
+
+Residential Tenancies Board (2021) *What are Rent Pressure Zones (RPZ)?* Available at: https://www.rtb.ie/during-a-tenancy/rent-review-in-a-rent-pressure-zone-rpz?gclid=Cj0KCQiAzfuNBhCGARIsAD1nu-8YhjJPsVbhgWjuM0et4lZX2ansT4b4XkLEEx9G63vDiVsptSzv8toaAkdDEALw_wcB (Accessed: 19 December 2021).
+
