@@ -60,8 +60,11 @@ Due to the 9 million rows in calendar.csv, it was decided to treat this dataset 
 ## Reading in the Airbnb Listings Data
 
 ```{r}
+
+DIRECTORY = "data_2021"
+
 # specifying the path to the CSV file
-file_path <- here("data", "listings.csv")
+file_path <- here(DIRECTORY, "listings.csv")
 
 # Read the CSV file
 df <- read_csv(file_path)
@@ -126,7 +129,7 @@ To examine how this dataset was created please see Rmd file called 'calendar_df.
 
 
 # specifying the path to the CSV file
-file_path <- here("data", "summarise_df.csv")
+file_path <- here(DIRECTORY, "summarise_df.csv")
 
 # Read the CSV file
 summarise_df <- read_csv(file_path)
@@ -178,7 +181,7 @@ To examine how this dataset was created please see Rmd file called 'calendar_df.
 ```{r}
 
 # specifying the path to the CSV file
-file_path <- here("data", "available_nights_df.csv")
+file_path <- here(DIRECTORY, "available_nights_df.csv")
 
 # Read the CSV file
 available_nights_df <- read_csv(file_path)
@@ -227,7 +230,7 @@ Rent Pressure Zones (RPZs) were developed by the Irish government to tackle risi
 ```{r}
 
 # specifying the path to the CSV file
-file_path <- here("data", "rent_pressure_zones.csv")
+file_path <- here(DIRECTORY, "rent_pressure_zones.csv")
 
 # Read the CSV file
 rpz_df <- read_csv(file_path, show_col_types = FALSE)
@@ -273,7 +276,7 @@ The website daft.ie is the leading property website in Ireland, which publishes 
 ```{r}
 
 # specifying the path to the CSV file
-file_path <- here("data", "rent_in_ireland.csv")
+file_path <- here(DIRECTORY, "rent_in_ireland_2021.csv")
 
 # Read the CSV file
 rent_df <- read_csv(file_path)
@@ -310,7 +313,7 @@ summary(rent_df)
 | Field | Type  | Description |
 |:-|:-|:-|
 | county_city | text | County or City, e.g. County Galway and Galway City |
-| rent_price_per_month | integer | Average price of a rental property in an area |
+| rent_potential_annual_income_per_month | integer | Average price of a rental property in an area |
 
 
 
@@ -854,24 +857,24 @@ df<- merge(df, rent_df, by.x = "county_city", by.y = "county_city")
 
 
 ### New Variable: Rent Per Day
-Using rent_df (dataset with county or city and average rent), A new variable was calculated 'rent_price_per_day' which is the rent the tenant pays per day to stay in their rented property. Although this is not how this is not normally used in the renting market, this variable will be compared to the price of AirBnB, which is in 'per day'. It was decided to find the rent per day, because not all properties are leased for 365 days a year.
+Using rent_df (dataset with county or city and average rent), A new variable was calculated 'rent_potential_annual_income_per_day' which is the rent the tenant pays per day to stay in their rented property. Although this is not how this is not normally used in the renting market, this variable will be compared to the price of AirBnB, which is in 'per day'. It was decided to find the rent per day, because not all properties are leased for 365 days a year.
 
 It was also assumed that private rooms will cost one third of an entire house to rent, i.e. if a house's rent is €1500, then a room to rent is €500. Although this is not the most accurate estimate, it is better than assuming that the price of a private room is the same as a rent of the whole house, i.e. €1500 for private room. This was also operated under the assumptions that all rooms in the house are the same size and have the same bathroom privileges, i.e. all en suite or all sharing.
 
 
 ```{r echo=FALSE}
-# if the property is 'Entire rental unit'. then multiply rent_price_per_month by 12 (months) and divide by 365 (days)
-# otherwise ('Private room' or 'Shared room') multiply rent_price_per_month by 12 (months), divide by 365 (days) and divide by 3 (rooms in the house)
+# if the property is 'Entire rental unit'. then multiply rent_potential_annual_income_per_month by 12 (months) and divide by 365 (days)
+# otherwise ('Private room' or 'Shared room') multiply rent_potential_annual_income_per_month by 12 (months), divide by 365 (days) and divide by 3 (rooms in the house)
 df <- df %>%  
-  mutate(rent_price_per_day = if_else(room_type == 'Entire rental unit', (rent_price_per_month*12)/365, ((rent_price_per_month*12)/365)/3))
+  mutate(rent_potential_annual_income_per_day = if_else(room_type == 'Entire rental unit', (rent_potential_annual_income_per_month*12)/365, ((rent_potential_annual_income_per_month*12)/365)/3))
 ```
 
 
 ```{r echo=FALSE}
-# if the property is 'Entire rental unit'. then multiply rent_price_per_month by 12 (months) 
-# otherwise ('Private room' or 'Shared room') multiply rent_price_per_month by 12 (months) and divide by 3 (rooms in the house)
+# if the property is 'Entire rental unit'. then multiply rent_potential_annual_income_per_month by 12 (months) 
+# otherwise ('Private room' or 'Shared room') multiply rent_potential_annual_income_per_month by 12 (months) and divide by 3 (rooms in the house)
 df <- df %>%  
-  mutate(rent_price_per_year = if_else(room_type == 'Entire rental unit', rent_price_per_month*12, (rent_price_per_month*12)/3))
+  mutate(rent_potential_annual_income_per_year = if_else(room_type == 'Entire rental unit', rent_potential_annual_income_per_month*12, (rent_potential_annual_income_per_month*12)/3))
 ```
 
 
@@ -885,7 +888,7 @@ If the AirBnB price is lower than price, then the property should be rented.
 ```{r echo=FALSE}
 # creating a new variable to state whether the property should be rented or on AirBnB
 df <- df %>%  
-  mutate(per_day_rent_AirBnB = if_else(price >= rent_price_per_day, 'AirBnB', 'Rent'))
+  mutate(per_day_rent_AirBnB = if_else(price >= rent_potential_annual_income_per_day, 'AirBnB', 'Rent'))
 
 
 # assigning factor to per_day_rent_AirBnB
@@ -906,7 +909,7 @@ df %>%
 
 df <- df %>%  
   select(everything()) %>%
-  mutate(per_year_rent_AirBnB = if_else(total_income >= rent_price_per_year, 'AirBnB', 'Rent'))
+  mutate(per_year_rent_AirBnB = if_else(total_income >= rent_potential_annual_income_per_year, 'AirBnB', 'Rent'))
 
 # assigning factor to per_year_rent_AirBnB
 df$per_year_rent_AirBnB <- as.factor(df$per_year_rent_AirBnB)
@@ -924,10 +927,10 @@ df %>%
 ### New Variable: Difference in Earnings - Long-Term or Airbnb - Numbers
 ```{r message=FALSE, echo=FALSE}
 df <- df %>%
-  mutate(annual_diff_rent_minus_Airbnb =rent_price_per_year -  total_income)
+  mutate(annual_diff_rent_minus_Airbnb =rent_potential_annual_income_per_year -  total_income)
  
 df %>%
-    select(total_income, price, availability_365,rent_price_per_day, rent_price_per_month, rent_price_per_year, per_day_rent_AirBnB, per_year_rent_AirBnB) 
+    select(total_income, price, availability_365,rent_potential_annual_income_per_day, rent_potential_annual_income_per_month, rent_potential_annual_income_per_year, per_day_rent_AirBnB, per_year_rent_AirBnB) 
 ```
 
 ### New Variable: RTZ
@@ -1198,14 +1201,14 @@ ncol(df)
 
 ```{r echo=FALSE}
 # Define the file path using here
-file_path <- here("data", "airbnb_final_df.csv")
+file_path <- here(DIRECTORY, "airbnb_final_df_2021.csv")
 
 # Save the dataframe as a CSV file
 write.csv(df, file = file_path, row.names = FALSE)
 
 ###################
 # Define the file path using here
-file_path <- here("data", "airbnb_large_df.csv")
+file_path <- here(DIRECTORY, "airbnb_large_df_2021.csv")
 # Save the dataframe as a CSV file
 write.csv(large_df, file = file_path)
 ```
@@ -1215,3 +1218,8 @@ write.csv(large_df, file = file_path)
 Lyons, R. (2021) *Irish Rental Report Q2 2021.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 17 December 2021).
 
 Residential Tenancies Board (2021) *What are Rent Pressure Zones (RPZ)?* Available at: https://www.rtb.ie/during-a-tenancy/rent-review-in-a-rent-pressure-zone-rpz?gclid=Cj0KCQiAzfuNBhCGARIsAD1nu-8YhjJPsVbhgWjuM0et4lZX2ansT4b4XkLEEx9G63vDiVsptSzv8toaAkdDEALw_wcB (Accessed: 19 December 2021).
+
+
+```{r}
+
+```

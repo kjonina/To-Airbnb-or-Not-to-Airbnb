@@ -28,8 +28,11 @@ library(crosstalk)
 
 
 ```{r setup, include=FALSE}
+DIRECTORY = "data_2024"
+
+
 # specifying the path to the CSV file
-file_path <- here("data", "airbnb_final_df.csv")
+file_path <- here(DIRECTORY, "airbnb_final_df.csv")
 
 # Read the CSV file
 df <- read_csv(file_path)
