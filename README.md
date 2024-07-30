@@ -36,5 +36,19 @@ Creating a statement that would clearly state: 'By AirBnBing you property for X 
 
 Money talks. 
 
+### Research Question
+1. How many entire units and private rooms Airbnb are in RPZs?
+2. Based on the availability \* price, what is the potential annual income from the Airbnb?
+3. When compared to the potential annual income from rent, how many landlords would earn more by long-term leasing the listing?
+4. How much MORE money could each of those landlords be earning if they long-term leased the property?
+
+
+ 
+## Data Sources
+
+Lyons, R. (2021) *Irish Rental Report Q2 2021.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 17 December 2021).
+
+Residential Tenancies Board (2021) *What are Rent Pressure Zones (RPZ)?* Available at: https://www.rtb.ie/during-a-tenancy/rent-review-in-a-rent-pressure-zone-rpz?gclid=Cj0KCQiAzfuNBhCGARIsAD1nu-8YhjJPsVbhgWjuM0et4lZX2ansT4b4XkLEEx9G63vDiVsptSzv8toaAkdDEALw_wcB (Accessed: 19 December 2021).
+
 
  

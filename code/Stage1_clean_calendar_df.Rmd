@@ -28,8 +28,8 @@ THIS RMD FILE TREATS CALENDAR.CSV
 Due to the 9 million rows in calendar.csv, it was decided to treat this dataset outside of this analysis due to the size of it. 
 
 - calendar_df.Rmd - Code to treat calendar.csv and create the two datasets below to analyse in this report
-- summarise_df.csv - A new dataset from calendar.csv  was created, where listings were examined by availability for each month within a year (26th June 20 24 to 28th June 2025).
-- available_nights_df.csv - A new dataset summarising the number of available nights for each listing in a year (26th June 20 24 to 28th June 2025).
+- summarise_df.csv - A new dataset from calendar.csv  was created, where listings were examined by availability for each month within a year (26th June 2024 to 28th June 2025).
+- available_nights_df.csv - A new dataset summarising the number of available nights for each listing in a year (26th June 2024 to 28th June 2025).
 - calendar_df.html - Document presents calendar_df.Rmd in HTML
 
 
@@ -47,11 +47,11 @@ library(camcorder)
 ```
 
 ## Dataset 'calendar_df'
-To examine next year's availability, the 'calendar.csv' for Ireland was downloaded from the AirBnB website. It was downloaded from http://insideairbnb.com/get-the-data.html (calendar.csv).  This dataset is between 26th June 20 24 to 28th June 2025. This dataset states whether the AirBnB listing is available on a specific date.
+To examine next year's availability, the 'calendar.csv' for Ireland was downloaded from the AirBnB website. It was downloaded from http://insideairbnb.com/get-the-data.html (calendar.csv).  This dataset is between 26th June 2024 to 28th June 2025. This dataset states whether the AirBnB listing is available on a specific date.
 
 Data Dictionary was summarised from https://docs.google.com/spreadsheets/d/1iWCNJcSutYqpULSQHlNyGInUvHg2BoUGoNRIGa6Szc4/edit#gid=982310896
 
-```{r setup, include=FALSE}
+```{r echo=FALSE, warning=FALSE}
 
 # Make sure to change this so that you can rerun code with 2021 data
 DIRECTORY = "data_2024"
@@ -193,7 +193,7 @@ calendar_df %>%
 ```
 
 ## Dataset 'summarise_df'
-A new dataset was created, where listings were examined by availability for each month within a year (26th June 20 24 to 28th June 2025).
+A new dataset was created, where listings were examined by availability for each month within a year (26th June 2024 to 28th June 2025).
 ```{r echo=FALSE}
 summarise_df <- calendar_df %>% 
   select(listing_id, month, available, price) %>% 
@@ -237,7 +237,7 @@ In 'summarise_df' dataset, there are `r nrow(summarise_df)` rows and `r ncol(sum
 Columns names are `r colnames(summarise_df)`.
 
 ## Dataset 'available_nights_df
-A new dataset summarising the number of available nights for each listing in a year (26th June 20 24 to 28th June 2025).
+A new dataset summarising the number of available nights for each listing in a year (26th June 2024 to 28th June 2025).
 
 ```{r echo=FALSE, warning=FALSE}
 # Examining availability for each host
