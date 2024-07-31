@@ -54,38 +54,34 @@ df$month_category <- factor(df$month_category, levels = c("1 month",
                                                             "12 months",
                                                             "More than 12 months"
                                                             ))
-# Print the first few rows to check
-head(df)
+
+# specifying the path to the CSV file
+file_path <- here(DIRECTORY, "airbnb_large_df_2024.csv")
+
+# Read the CSV file
+large_df <- read_csv(file_path)
+
+
+# changing 'month' to factor
+large_df$month <- as.factor(large_df$month)
+# changing  the order of factors
+large_df$month <- factor(large_df$month, levels = c("August 2024",
+                                                          "September 2024",
+                                                           "October 2024",
+                                                          "November 2024",
+                                                          "December 2024",
+                                                          "January 2025",
+                                                          "February 2025",
+                                                          "March 2025",
+                                                          "April 2025",
+                                                          "May 2025",
+                                                          "June 2025",
+                                                          "July 2024",
+                                                          "June 2024"   
+                                                            ))
+
 ```
 
-```{r}
-df %>%
-  group_by(month_category) %>%
-  summarise(n = n())
-```
-
-
-```{R echo=FALSE, warning=FALSE, message=FALSE}
-camcorder::gg_record(dir = here("outputs"),
-  device = "png",
-  width = 8, height = 7,
-  units = "in", dpi = 320
-  )
-```
-
-
-### Final Dataset
-In the final 'df' dataset, there are `r nrow(df) ` rows and `r ncol(df)` columns. Columns names are  `r colnames(df)`. 
-
-Because our dataset was has been merged with 'available_nights_df', as described above, our dataset has AirBnB listings only available from 23rd October 2021 to 21st October 2022. Any past AirBnB are not included in our dataset. 
-
-```{r echo=FALSE}
-summary(df)
-```
-
-```{r echo=FALSE}
-head(df)
-```
 ```{r echo=FALSE}
 df %>%
   select(id, county,room_type, availability_365, price, airbnb_potential_annual_income, #rent_price_per_month, 
@@ -94,7 +90,7 @@ df %>%
      
      
 ```
-# Data Visualisation
+
 ```{r echo=FALSE}
 # assigning colors to specific variable 
 # will be used in graphs to ensure that the colours remain the same.
@@ -126,7 +122,85 @@ reverse_viridis = c( "#FDE725FF",
 ```
 
 
-# RPZ
+## AirBnB OverView
+``` {r}
+df %>%
+  group_by(room_type) %>%
+    summarise(n = n_distinct(id)) %>%
+  plot_ly(labels = ~room_type, values = ~n, type = 'pie',
+          textinfo = 'label+percent',
+          hoverinfo = 'label+value',
+          marker = list(colors =room_colors),
+          hole = 0.45) %>%
+  layout(title = list(text = '<b>The Most Common Acccomodation Type in Ireland is <span style="color:#54A24B;">Entire Units</span></b>',
+                      x = 0.5),
+         showlegend = FALSE)
+
+```
+
+### Where are the AirBnB listings in Ireland?
+```{r warning=FALSE, echo=FALSE}
+# Calculate the total number of listings
+total_listings <- df %>%
+  summarise(total = n_distinct(id)) %>%
+  pull(total)
+
+# Create the plot with percentage labels
+fig <- df %>%
+  group_by(county) %>%
+  summarise(n = n_distinct(id)) %>%
+  mutate(
+    county = fct_reorder(county, n, .desc = FALSE),
+    percent = round((n / total_listings) * 100, 1)  # Calculate percentage
+  ) %>%
+  plot_ly(
+    y = ~county, 
+    x = ~n,
+    text = ~paste0(percent, "%"),  # Add percentage labels
+    textposition = 'outside',  # Position labels outside the bars
+    hovertemplate = ~paste0("County: ", county, "<br>", "Number of AirBnB listings: ", n, "<br>", "Percentage: ", percent, "%")
+  ) %>%
+  add_bars(showlegend = FALSE) %>%
+  layout(
+    yaxis = list(title = FALSE, automargin = TRUE),  # Ensure y-axis labels fit
+    xaxis = list(title = "# of AirBnB listings"),
+    title = list(
+      text = 'Which counties have the most AirBnB listings in Ireland?',
+      x = 0.5,
+      y = 0.95,
+      xanchor = 'center',
+      yanchor = 'top'
+    ),
+    margin = list(t = 50, b = 50, l = 50)# ,  # Adjust margins to fit the title and graph
+   # height = 600  # Increase height to fit all counties
+  )
+
+fig
+
+```
+
+### When are most AirBnB listings Available?
+
+```{r echo=FALSE, warning=FALSE}
+
+sum_df <- large_df %>% 
+  select(id, month) %>% 
+  group_by(month) %>% 
+  summarize(count_distinct = n_distinct(id))
+
+
+sum_df %>%
+  plot_ly(x = ~month, y = ~count_distinct, #color = ~rent_pressure_zone,
+          hovertemplate = ~paste("Month:", month, "<br>", 
+                                 "Number of AirBnB listings:", count_distinct)) %>%
+  add_lines(showlegend = FALSE) %>%
+  layout(xaxis = list(title = FALSE),
+         yaxis = list(title = "# of AirBnB listings", range = c(0, max(sum_df$count_distinct))),
+         title = "When are the most AirBnB listings Available?")
+
+```
+
+# Exploring Rent Pressure Zones
 ```{r echo=FALSE, warning=FALSE}
 # creating a map of Ireland with AirBnB listings in RTZ differentiated 
 g <- list(
@@ -161,6 +235,7 @@ fig <- fig %>% layout(
     title = 'Which AirBnB listings are in the RTZs?', geo = g)
 
 fig
+
 ```
 
 
@@ -182,7 +257,7 @@ df %>%
 ```
 
 ```{r echo=FALSE, warning=FALSE}
-# eamining the number of AirBnB listings available in each month
+
 df %>%
   select(id, rent_pressure_zone) %>%
   group_by(rent_pressure_zone) %>%
@@ -201,50 +276,56 @@ df %>%
           hoverinfo = 'label+value',
           hole = 0.5,
           marker = list(colors = pressure_colors)) %>%
-  layout(title = list(text = '<b><span style="color:#D62728;">Over 11,300</span> of Airbnb listings are in <span style="color:#D62728;">Rent Pressure Zones</span>.</b>',
+  layout(title = list(text = '<b><span style="color:#D62728;">Nearly half</span> of all Airbnb listings are in <span style="color:#D62728;">Rent Pressure Zones</span>.</b>',
                       x = 0.5),
-         showlegend = TRUE)
+        legend = list(
+          orientation = "h",
+          y = -0.1,
+          x = 0.5,
+          xanchor = "center",
+          yanchor = "bottom"
+    ))
 
 ```
 
 ### Breakdown of AirBnB listings by Accomodation Type and RPZ
 ```{r echo=FALSE}
-df %>%
+
+
+
+# Summarize the data and calculate percentages
+df_summary <- df %>%
   group_by(rent_pressure_zone, room_type) %>%
   summarise(n = n_distinct(id)) %>%
+  ungroup() %>%
+  mutate(
+    room_type = fct_reorder(room_type, n, .desc = TRUE),
+    total = sum(n),
+    percent = round((n / total) * 100, 1)
+  )
+
+    
+    
+df_summary %>%
+
   mutate(room_type = fct_reorder(room_type, n, .desc = TRUE)) %>%
-  plot_ly(x = ~room_type, y = ~n, color = ~rent_pressure_zone,
+  plot_ly(x = ~room_type, y = ~n, color = ~rent_pressure_zone,    
+          text = ~paste(percent, "%"),  # Add percentage labels
+    textposition = 'outside',  # Position labels outside the bars
           
-          hovertemplate = ~paste("RTZ:", rent_pressure_zone, "<br>",
-                        "Accomodation Type:", room_type, "<br>", 
+          hovertemplate = ~paste(rent_pressure_zone, '-',  room_type, "<br>", 
                         "Number of AirBnB listings:", n)) %>%
   add_bars(showlegend=FALSE, colors = pressure_colors) %>%
   layout(xaxis = list(title = FALSE),
-          yaxis = list(title = "Number of AirBnB listings"),
-         title = list(text = '<b>There are as Entire Units on Airbnb\n as Private Rooms in <span style="color:#D62728;">Rent Pressure Zones</span>.<b>',
-                      x = 0.5))
+          yaxis = list(title = "# of AirBnB listings"),
+         title = list(text = '<b>There are nearly twice as many Entire Units on Airbnb\n as Private Rooms in <span style="color:#D62728;">Rent Pressure Zones</span>.<b>',
+                      x = 0.5),
+    margin = list(t = 100, b = 50)
+  )
    
 ```
 
 
-
-```{r echo=FALSE}
-df %>%
-  group_by( rent_pressure_zone,best_choice_airbnb_or_rent_per_year) %>%
-  summarise(n_id = n_distinct(id)) %>%
-  plot_ly(x = ~rent_pressure_zone, y = ~n, color = ~best_choice_airbnb_or_rent_per_year) %>%
-  add_bars(showlegend=FALSE, colors = rent_colors) %>%
-  layout(xaxis = list(title = FALSE),
-          yaxis = list(title = "Number of AirBnB listings"),
-         title = list(text = '',
-                      x = 0.5))
-   
-```
-
-**Comment:**
-Table above is summarised with this graph. There are more Entire Units and private rooms available outside of RTZs than there are in the RTZs. However, this could be due to fact that there are more houses in general outside the RTZs than inside the RTZs, which would show more AirBnB listings outside RTZs than inside RTZs.
-
-### Breakdown of Price by: Room Type and non-/RTZ
 ```{r warning=FALSE, echo=FALSE}
 df %>%
   plot_ly(x = ~room_type, y = ~price, color = ~rent_pressure_zone) %>%
@@ -256,13 +337,11 @@ df %>%
          zerolinewidth = 2,
          gridcolor = 'ffff',
          range = list(0, 450)), 
-         title = list(text = '<b><span style="color:#D62728;">Entire Units in Rent Pressure Zoness</span> are\n on average <span style="color:#D62728;">more expensive</span> than units outside of RPZs\n or other accommodation types</b>',
+         title = list(text = '<b><span style="color:#D62728;">Entire Units in Rent Pressure Zones</span> are\n on average <span style="color:#D62728;">more expensive</span> than units outside of RPZs\n or other accommodation types</b>',
                       x = 0.5),
-    boxmode = "group") 
+    boxmode = "group"  ) 
    
 ```
-
-# Rent Pressure Zones
 
 ```{r echo=FALSE, warning=FALSE}
 
@@ -325,7 +404,6 @@ fig
 ```
 
 
-
 ```{r echo=FALSE, warning=FALSE}
 
 rpz_df %>%
@@ -364,8 +442,7 @@ rpz_df %>%
 
 ```
 
-## Splitting data by room_type
-A new dataset was created where AirBnB listings were selected that offered Entire Unit.  This new dataset was used for this section of the report.  
+ 
 ```{r echo=FALSE}
 # create new dataset where filtered by 'Entire Unit'
 entire_rpz <-  rpz_df %>% 
@@ -377,6 +454,17 @@ entire_rpz_count <- entire_rpz %>%
   group_by(best_choice_airbnb_or_rent_per_year) %>%
     summarise(n = n_distinct(id)) 
 
+#######################
+#
+#######################
+# create new dataset where filtered by 'private 
+private <-  rpz_df %>% 
+  filter(room_type =='Private room')
+
+
+private_rpz_count <- private %>%
+  group_by(best_choice_airbnb_or_rent_per_year) %>%
+  summarise(n = n_distinct(id))
 
 #######################
 # annual_diff_rent_minus_Airbnb
@@ -393,20 +481,6 @@ entire_rpz_more_income_rent <-  entire_rpz %>%
 private_room_rpz_more_income_rent <-  private %>%
   filter(annual_diff_rent_minus_Airbnb <0)  %>%
   mutate(annual_diff_rent_minus_Airbnb = abs(annual_diff_rent_minus_Airbnb))
-
-#######################
-#
-#######################
-# create new dataset where filtered by 'private 
-private <-  rpz_df %>% 
-  filter(room_type =='Private room')
-
-
-private_rpz_count <- private %>%
-  group_by(best_choice_airbnb_or_rent_per_year) %>%
-  summarise(n = n_distinct(id))
-
-
 
 
 
@@ -461,72 +535,69 @@ fig <- fig %>% layout(title = '<b><span style="color:#F58518;">Over One-Third En
 fig
 ```
 
-## Entire Rental
 
-```{r echo=FALSE}
-entire_rpz_more_income_rent %>%
-  group_by(county) %>%
-  summarise(n_id = n_distinct(id)) %>%
-  mutate(county = fct_reorder(county, n_id, .desc = T)) 
-
-```
+```{r repeating_functions, echo=FALSE}
 
 
-```{r echo=FALSE}
+counties_with_most_income_from_leasing <- function(table) { 
+  rpz_more_income_rent_county <- table %>%
+    group_by(county) %>%
+    summarise(n_id = n_distinct(id)) %>%
+    mutate(county = fct_reorder(county, n_id, .desc = T)) 
+  
+  county_max_nid <- round(max(rpz_more_income_rent_county$n_id), -2)
+  
+  county_max <- rpz_more_income_rent_county %>%
+    filter(n_id == max(n_id))%>%
+    select(county) %>%
+    pull()
+  
+  
+  # Create the plot
+  fig <- table %>%
+    group_by(county, best_choice_airbnb_or_rent_per_year) %>%
+    summarise(n_id = n_distinct(id)) %>%
+    ungroup() %>%  # Ensure the factor reordering is applied correctly
+    mutate(county = fct_reorder(county, n_id, .desc = FALSE)) %>%
+    plot_ly(y = ~county, x = ~n_id, color = ~best_choice_airbnb_or_rent_per_year,
+            hovertemplate = ~paste("County:", county, "<br>",
+                                   "Accomodation Type:", best_choice_airbnb_or_rent_per_year, "<br>", 
+                                   "Number of AirBnB listings:", n_id)) %>%
+    add_bars(showlegend = FALSE, marker = list(color = '#F58518')) %>%
+    layout(
+      yaxis = list(title = FALSE, categoryorder = "total ascending"),  # Order y-axis by n_id
+      xaxis = list(title = "# of AirBnB listings"),
+      title = list(
+        text = paste('<b>Based on Potential Annual Income,\nnearly',  county_max_nid , 'Entire Units would bring more income\nby <span style="color:#F58518;">Long-Term Leasing</span> in' , county_max, '</b>'),
+        x = 0.5,
+        y = 0.95,
+        xanchor = 'center',
+        yanchor = 'top'
+      ),
+      margin = list(t = 100, b = 50)  # Adjust margins to fit the title and graph
+    )
+  
+  return(fig)
+}
 
-library(forcats)
 
-
-# Create the plot
-fig <- entire_rpz_more_income_rent %>%
-  group_by(county, best_choice_airbnb_or_rent_per_year) %>%
-  summarise(n_id = n_distinct(id)) %>%
-  ungroup() %>%  # Ensure the factor reordering is applied correctly
-  mutate(county = fct_reorder(county, n_id, .desc = FALSE)) %>%
-  plot_ly(y = ~county, x = ~n_id, color = ~best_choice_airbnb_or_rent_per_year,
-          hovertemplate = ~paste("County:", county, "<br>",
-                                 "Accomodation Type:", best_choice_airbnb_or_rent_per_year, "<br>", 
-                                 "Number of AirBnB listings:", n_id)) %>%
-  add_bars(showlegend = FALSE, marker = list(color = '#F58518')) %>%
-  layout(
-    yaxis = list(title = FALSE, categoryorder = "total ascending"),  # Order y-axis by n_id
-    xaxis = list(title = "Number of AirBnB listings that would bring more income by Long-Term Leasing than Airbnb"),
-    title = list(
-      text = '<b>Based on Potential Annual Income,\nnearly 1,400 Entire Units would bring more income\nby <span style="color:#F58518;">Long-Term Leasing</span> in Dublin</b>',
-      x = 0.5,
-      y = 0.95,
-      xanchor = 'center',
-      yanchor = 'top'
-    ),
-    margin = list(t = 100, b = 50)  # Adjust margins to fit the title and graph
-  )
-
-fig
-
-```
-
-
-```{r warning=FALSE, echo=FALSE}
-entire_rpz_more_income_rent_month_category_county_table <- entire_rpz_more_income_rent %>%
+function_rpz_more_income_rent_month_category_county_table <- function(table) { #
+  rpz_more_income_rent_month_category_county_table <- table %>%
   group_by(month_category, county, id) %>%
-  
-  
   ungroup() %>%
-   group_by(month_category, county)%>%
-   
+  group_by(month_category, county)%>%
   summarise(
     n = n(),
     min_profit = min(annual_diff_rent_minus_Airbnb),
     mean_profit = mean(annual_diff_rent_minus_Airbnb), 
     median_profit = median(annual_diff_rent_minus_Airbnb),  
-    max_profit = max(annual_diff_rent_minus_Airbnb),
-            ) 
-print(entire_rpz_more_income_rent_month_category_county_table)
-```
+    max_profit = max(annual_diff_rent_minus_Airbnb)) 
+  
+  return(rpz_more_income_rent_month_category_county_table)
+}
 
-```{r warning=FALSE, echo=FALSE}
 
-crosstable_function <- function(table) { # create a function with the name my_function
+crosstable_function <- function(table) {
   entire_month_category_county_crosstable <- table %>%
     select(month_category, county, mean_profit) %>%
     pivot_wider(names_from = month_category, values_from = mean_profit)
@@ -580,6 +651,23 @@ crosstable_function <- function(table) { # create a function with the name my_fu
 
 
 
+
+
+
+
+```
+
+
+
+```{r warning=FALSE, echo=FALSE}
+counties_with_most_income_from_leasing(entire_rpz_more_income_rent)
+
+
+```
+
+
+```{r}
+entire_rpz_more_income_rent_month_category_county_table <- function_rpz_more_income_rent_month_category_county_table(entire_rpz_more_income_rent)#
 crosstable_function(entire_rpz_more_income_rent_month_category_county_table)
 
 ```
@@ -607,95 +695,21 @@ entire_rpz_more_income_rent %>%
 ```
 
 
-## private Room
 
 
 ```{r echo=FALSE}
-private_room_rpz_more_income_rent %>%
-  group_by(county, best_choice_airbnb_or_rent_per_year) %>%
-  summarise(n_id = n_distinct(id)) %>%
-  ungroup() %>%  # Ensure the factor reordering is applied correctly
-  mutate(county = fct_reorder(county, n_id, .desc = FALSE)) %>%
-  plot_ly(y = ~county, x = ~n_id, color = ~best_choice_airbnb_or_rent_per_year,
-          hovertemplate = ~paste("County:", county, "<br>",
-                                 "Accomodation Type:", best_choice_airbnb_or_rent_per_year, "<br>", 
-                                 "Number of AirBnB listings:", n_id)) %>%
-  add_bars(showlegend = FALSE, marker = list(color = '#F58518')) %>%
-  layout(
-    yaxis = list(title = FALSE, categoryorder = "total ascending"),  # Order y-axis by n_id
-    xaxis = list(title = "Number of AirBnB listings that would bring more income by Long-Term Leasing than Airbnb"),
-    title = list(
-      text = '<b>Based on Potential Annual Income,\nnearly 700 Private Rooms would bring more income\nby <span style="color:#F58518;">Long-Term Leasing</span> in Dublin</b>',
-      x = 0.5,
-      y = 0.95,
-      xanchor = 'center',
-      yanchor = 'top'
-    ),
-    margin = list(t = 100, b = 50)  # Adjust margins to fit the title and graph
-  )
+counties_with_most_income_from_leasing(private_room_rpz_more_income_rent)
+
 
    
 ```
 
 ```{r warning=FALSE, echo=FALSE}
-private_room_month_category_county_table <- private_room_rpz_more_income_rent %>%
-  group_by(month_category, county) %>%
-  summarise(
-    min_profit = min(annual_diff_rent_minus_Airbnb),
-    mean_profit = mean(annual_diff_rent_minus_Airbnb), 
-    median_profit = median(annual_diff_rent_minus_Airbnb),  
-    max_profit = max(annual_diff_rent_minus_Airbnb),
-            ) 
+
+private_room_rpz_more_income_rent_month_category_county_table <- function_rpz_more_income_rent_month_category_county_table(private_room_rpz_more_income_rent)#
+crosstable_function(private_room_rpz_more_income_rent_month_category_county_table)
 
 
-private_room_month_category_county_crosstable <- private_room_month_category_county_table %>%
-  select(month_category, county, mean_profit) %>%
-  pivot_wider(names_from = month_category, values_from = mean_profit)
-
-
-
-# Order by the '1 month' column in descending order
-private_room_month_category_county_crosstable <- private_room_month_category_county_crosstable %>%
-  arrange(desc(`1 month`), desc = FALSE) %>%
-  mutate(across(where(is.numeric), ~ round(., -1)))
-
-private_room_month_category_county_crosstable[is.na(private_room_month_category_county_crosstable)] <- 0
-
-# Create a heatmap
-heatmap_data <- as.matrix(select(private_room_month_category_county_crosstable, -county))
-rownames(heatmap_data) <- private_room_month_category_county_crosstable$county
-
-
-heatmap <- plot_ly(
-  x = colnames(heatmap_data),
-  y = rownames(heatmap_data),
-  z = heatmap_data,
-  type = "heatmap",
-  colors = colorRamp(c("white", "#F58518"))
-) %>%
-  layout(
-    title = "Heatmap of Mean Profit by Month Category and County",
-    xaxis = list(title = "Month Category"),
-    yaxis = list(title = "County")
-  )
-
-
-# Add annotations
-for (i in seq_len(nrow(heatmap_data))) {
-  for (j in seq_len(ncol(heatmap_data))) {
-    heatmap <- heatmap %>%
-      add_annotations(
-        x = colnames(heatmap_data)[j],
-        y = rownames(heatmap_data)[i],
-        text = round(heatmap_data[i, j], 2),
-        showarrow = FALSE,
-        font = list(color = 'black')
-      )
-  }
-}
-
-# Show the plot
-heatmap
 
 ```
 
@@ -718,7 +732,37 @@ private_room_rpz_more_income_rent %>%
 ```
 
 
-## AirBnB OverView
+
+# Appendix
+
+
+### Final Dataset
+In the final 'df' dataset, there are `r nrow(df) ` rows and `r ncol(df)` columns. Columns names are  `r colnames(df)`. 
+
+Because our dataset was has been merged with 'available_nights_df', as described above, our dataset has AirBnB listings only available from 23rd October 2021 to 21st October 2022. Any past AirBnB are not included in our dataset. 
+
+```{r echo=FALSE}
+summary(df)
+```
+
+```{r echo=FALSE}
+ncol(df)
+```
+
+```{r echo=FALSE}
+nrow(df)
+```
+
+```{r echo=FALSE}
+n_distinct(df$id)
+```
+
+
+```{r echo=FALSE}
+head(df)
+```
+
+
 ```{r echo=FALSE, warning=FALSE}
 # creating a map of Ireland with AirBnB listings
 g <- list(
@@ -738,100 +782,10 @@ g <- list(
 fig <- plot_geo(df, lat = ~latitude, lon = ~longitude, color = ~county)
 fig <- fig %>% add_markers(marker = list(opacity = 0.4), showlegend = FALSE,
                 
-                hovertemplate = ~paste("County:", county, "<br>", 
-                        "Price (in €):", price, "<br>",
-                        "Room Type", room_type, "<br>",
-                        "Mininum stay (in nights)", minimum_nights, "<br>",
-                        "Availability (in nights)", available_nights))
+                hovertemplate = ~paste("County:", county))
 fig <- fig %>% layout(
     title = 'Where are the AirBnB listings in Ireland?', geo = g)
 
 fig
-```
-**Comment:**
-It is clear from this graph that there are some parts of Ireland that have more AirBnB listings than others. It is easy to see that there are more properties available on the coast than inland. 
-
-
-### Room Types are available on AirBnB
-``` {r}
-df %>%
-  group_by(room_type) %>%
-    summarise(n = n_distinct(id)) %>%
-  plot_ly(labels = ~room_type, values = ~n, type = 'pie',
-          textinfo = 'label+percent',
-          hoverinfo = 'label+value',
-          marker = list(colors =room_colors),
-          hole = 0.45) %>%
-  layout(title = list(text = '<b>The Most Common Acccomodation Type in Ireland is <span style="color:#54A24B;">Entire Units</span></b>',
-                      x = 0.5),
-         showlegend = FALSE)
-
-```
-
-### Where are the AirBnB listings in Ireland?
-```{r warning=FALSE, echo=FALSE}
-df %>%
-  group_by(county) %>%
-    summarise(n = n_distinct(id)) %>%
-  mutate(county = fct_reorder(county, n, .desc = FALSE)) %>%
-  plot_ly(y = ~county, x = ~n,
-          
-          hovertemplate = ~paste("County:", county, "<br>", "Number of AirBnB listings:", n)) %>%
-  add_bars(showlegend = FALSE) %>%
-  layout(yaxis = list(title = FALSE),
-          xaxis = list(title = "Number of AirBnB listings"),
-         title= 'Which counties have the most AirBnB listings in Ireland?') 
-```
-
-### When are most AirBnB listings Available?
-
-
-
-```{r echo=FALSE, warning=FALSE}
-# specifying the path to the CSV file
-file_path <- here(DIRECTORY, "airbnb_large_df_2024.csv")
-
-# Read the CSV file
-large_df <- read_csv(file_path)
-
-
-# changing 'month' to factor
-large_df$month <- as.factor(large_df$month)
-# changing  the order of factors
-large_df$month <- factor(large_df$month, levels = c("August 2024",
-                                                          "September 2024",
-                                                           "October 2024",
-                                                          "November 2024",
-                                                          "December 2024",
-                                                          "January 2025",
-                                                          "February 2025",
-                                                          "March 2025",
-                                                          "April 2025",
-                                                          "May 2025",
-                                                          "June 2025",
-                                                          "July 2024",
-                                                          "June 2024"   
-                                                            ))
-
-```
-
-
-```{r echo=FALSE, warning=FALSE}
-
-sum_df <- large_df %>% 
-  select(id, month) %>% 
-  group_by(month) %>% 
-  summarize(count_distinct = n_distinct(id))
-
-
-sum_df %>%
-  plot_ly(x = ~month, y = ~count_distinct, #color = ~rent_pressure_zone,
-          hovertemplate = ~paste("Month:", month, "<br>", 
-                                 "Number of AirBnB listings:", count_distinct)) %>%
-  add_lines(showlegend = FALSE) %>%
-  layout(xaxis = list(title = FALSE),
-         yaxis = list(title = "Number of AirBnB listings", range = c(0, max(sum_df$count_distinct))),
-         title = "When are the most AirBnB listings Available?")
-
 ```
 
