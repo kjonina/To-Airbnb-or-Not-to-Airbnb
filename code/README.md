@@ -57,11 +57,39 @@ There have been talks of the Irish government to "bring legislation to create ne
 
 Please look at Stage 2 and Stage 3 for Data Understanding.
 
- 
+ # Conclusion
+There are concerns that AirBnB listings are reducing the supply of long-term leases in RPZs, which was shown to be true. The regulation that is being put forward by the government to dramatically decrease the number of AirBnB listings of Entire Units is very useful, however, this should also apply to  private rooms in RPZs, which can be used by college students and young professionals.  Entire Units can be used by families or couples for long-term rent. Furthermore, it is unclear why the landlords choose to put their property on AirBnB when it has been showen that it is more profitable to rent the property when comparing potential AirBnB earning for the year (available nights * daily price) and potential annual rent earnings (rent per month * 12). 
+
+As previously stated, a lot of listings were placed as long-term listings when the pandemic hit, hopefully reducing the pressure on the housing crisis. However, as we continue to come out of the pandemic, we should worry about the return of lack of accommodation in RPZs because of tourist season and increase in AirBnB listings. 
+
+### Limitations
+**Data** 
+Although there were `r ncol(df)` columns of data in the final data, there are a few vital piece of information are missing. There are Entire Units (houses or apartments) that available for over 90 days of the year in Rent Pressurised Areas, which would require a planning permission. However, this poses a different question: 
+- Why don't AirBnB hosts have their properties available all year around? 
+- Why do AirBnB hosts choose to place their property on AirBnB and not do long-term leasing?
+- Should the government create incentives for AirBnB hosts to lease their property for long-term? 
+- Based on above question, perhaps, the government should review obstacles of long-term leasing. 
+
+**Licence / Planning Permission**
+After reading Data Dictionary provided AirBnB, it is unclear what is meant by column ‘licence’ in the AirBnB data.  Data analysis at the beginning showed that there are no values in column ‘licence’ and it was dropped from analysis. However, this raises concerns that it be referring to the planning permission required by the local authorities from hosts in RPZ. Lack of planning permissions from the local authorities should be examined. AirBnB should seek planning permissions from their hosts if they meet the criteria for planning permission.  
+
+
 ## Data Sources
 
-Lyons, R. (2021) *Irish Rental Report Q2 2021.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 17 December 2021).
+Lyons, R. (2021) *Irish Rental Report Q1 2024.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 28th June 2024).
 
-Residential Tenancies Board (2021) *What are Rent Pressure Zones (RPZ)?* Available at: https://www.rtb.ie/during-a-tenancy/rent-review-in-a-rent-pressure-zone-rpz?gclid=Cj0KCQiAzfuNBhCGARIsAD1nu-8YhjJPsVbhgWjuM0et4lZX2ansT4b4XkLEEx9G63vDiVsptSzv8toaAkdDEALw_wcB (Accessed: 19 December 2021).
+Residential Tenancies Board (2021) *What are Rent Pressure Zones (RPZ)?* Available at: https://www.rtb.ie/registration-and-compliance/setting-and-reviewing-rent/guide-to-rent-pressure-zones (Accessed: 31 July 2024).
+
+
+ 
+
+# References
+Burke, C. (2021) *Rents continue to rise across Ireland as number of rental homes available hits ‘all-time low’, TheJournal.ie.* Available at: https://www.thejournal.ie/daft-rental-report-all-time-low-5596453-Nov2021/ (Accessed: 17 December 2021).
+
+Burke-Kennedy, E. (2021) *Airbnb exodus increases stock of rental property in Dublin by 90%, The Irish Times.* Available at: https://www.irishtimes.com/business/economy/airbnb-exodus-increases-stock-of-rental-property-in-dublin-by-90-1.4654155 (Accessed: 17 December 2021).
+
+Citizensinformation.ie (no date) *Renting your property for short-term lets.* Citizensinformation.ie. Available at: https://www.citizensinformation.ie/en/housing/owning_a_home/home_owners/renting_your_property_for_shortterm_lets.html (Accessed: 17 December 2021).
+
+Pope, C. (2021) *New restrictions likely to reduce supply of short-term rental property, The Irish Times.* Available at: https://www.irishtimes.com/business/new-restrictions-likely-to-reduce-supply-of-short-term-rental-property-1.4653404 (Accessed: 17 December 2021).
 
 

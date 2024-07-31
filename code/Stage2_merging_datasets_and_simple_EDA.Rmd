@@ -499,6 +499,16 @@ head(rpz_df)
 summary(rpz_df)
 ```
 
+
+
+```{r}
+unique_neighbourhoods <- unique(rpz_df$neighbourhood)
+
+unique_neighbourhoods_list <- as.list(unique_neighbourhoods)
+```
+
+
+
 ### Data Dictionary
 | Field | Type  | Description |
 |:-|:-|:-|
@@ -735,6 +745,10 @@ df %>%
 
 ### New Variable: Difference in Earnings - Long-Term or Airbnb - Numbers
 ```{r message=FALSE, echo=FALSE}
+
+
+# If POSITIVE, then AIRBNB brings more income
+# If NEGATIVE, then RENT brings more income
 df <- df %>%
   mutate(annual_diff_rent_minus_Airbnb = airbnb_potential_annual_income -  rent_potential_annual_income)
 ```
@@ -813,6 +827,16 @@ df <- df %>%
       str_detect(lea, 'Tullamore LEA') ~ TRUE,
       str_detect(lea, 'Mullingar LEA') ~ TRUE,
       str_detect(lea, 'Bandon-Kinsale LEA') ~ TRUE,
+      str_detect(lea, 'Westport LEA') ~ TRUE,
+      str_detect(lea, 'Shannon LEA') ~ TRUE,
+      str_detect(lea, 'Ennis LEA, Co. Clare') ~ TRUE,
+      str_detect(county, 'Kilkenny') ~ TRUE,
+      str_detect(county, 'Limerick') ~ TRUE,
+      str_detect(county, 'Waterford') ~ TRUE,
+      str_detect(county, 'Westmeath') ~ TRUE,
+
+     
+      
       TRUE ~ FALSE)) 
 
 
@@ -1033,9 +1057,53 @@ write.csv(large_df, file = file_path)
  
 ## Data Sources
 
-Lyons, R. (2021) *Irish Rental Report Q2 2021.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 17 December 2021).
+Lyons, R. (2021) *Irish Rental Report Q1 2024.* Available at: https://ww1.daft.ie/report/ronan-lyons-2024q1-daftrentalprice?d_rd=1 (Accessed: 17 December 2021).
 
 Residential Tenancies Board (2021) *What are Rent Pressure Zones (RPZ)?* Available at: https://www.rtb.ie/during-a-tenancy/rent-review-in-a-rent-pressure-zone-rpz?gclid=Cj0KCQiAzfuNBhCGARIsAD1nu-8YhjJPsVbhgWjuM0et4lZX2ansT4b4XkLEEx9G63vDiVsptSzv8toaAkdDEALw_wcB (Accessed: 19 December 2021).
+
+
+```{r}
+
+#RPZ or Non-RPZ
+pressure_colors = c( "#316395", "#D62728")
+
+# creating a map of Ireland with AirBnB listings in RTZ differentiated 
+g <- list(
+  scope = 'europe',
+  showland = TRUE,
+  landcolor = toRGB("gray95"),
+  subunitcolor = toRGB("gray85"),
+  countrycolor = toRGB("gray85"),
+  countrywidth = 0.5,
+  subunitwidth = 0.5,
+
+  resolution = 50,
+  lonaxis = list(range = c(-12, -5)),
+  lataxis = list(range = c(52, 55))
+)
+
+
+
+unique_id_df <- df %>%
+  group_by(id, rent_pressure_zone, lea, council, county, room_type, latitude, longitude) %>%
+  summarise(price = mean(price))
+
+fig <- plot_geo(df, lat = ~latitude, lon = ~longitude, color = ~rent_pressure_zone)
+fig <- fig %>% add_markers(marker = list(opacity = 0.2), showlegend=FALSE, colors = pressure_colors,
+                          
+                          hovertemplate = ~paste("LEA:", lea, "<br>", 
+                                        "Council:", council, "<br>",
+                                        "Price (in €):", price, "<br>",
+
+                                        
+                                        "County:", county, "<br>",
+                                        "Room Type", room_type, "<br>",
+                                        "RTZ", rent_pressure_zone, "<br>"))
+fig <- fig %>% layout(
+    title = 'Which AirBnB listings are in the RTZs?', geo = g)
+
+fig
+```
 
 
 ```{r}
