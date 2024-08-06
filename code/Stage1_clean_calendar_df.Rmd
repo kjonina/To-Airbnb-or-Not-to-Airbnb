@@ -18,13 +18,6 @@ Two Rmd files were submitted, one analysing AirBnB data, the other treating and 
 THIS RMD FILE TREATS CALENDAR.CSV
 
 ## Files submitted
-- listings.csv - AirBnB Listings in Ireland from the beginning of AirBnB operating in Ireland
-- calendar.csv - AirBnB Listings from 23rd October 2021 to 21st October 2021 (dates not chosen by student, supplied by AirBnB), contains 9 million rows.
-- homeless_September_2021.csv - Homeless Report, which is published every month by the Irish government, captures statistics about homelessness (Department of Housing, Local Government and Heritage, 2021). The csv was manually created from this report. 
-- rent_pressure_zones.csv -Rent Pressure Zones (RPZs) were developed by the Irish government to tackle rising rents lack of affordable rental units. These are areas located in parts of the country where rents are the highest and rising, and where households have the greatest difficulty finding affordable accommodation (Residential Tenancies Board, 2021). The csv was manually created from RTB website. 
-- rent_in_ireland.csv - The website daft.ie is the leading property website in Ireland, which publishes reports on the Irish housing market every quarter. For this next dataset, the report Q2 2021 was used to find out the rent in each city and county in Ireland (Lyons, 2021). The csv was manually created from the report. 
-- Karina.Jonina.Project.html - Document presents Karina.Jonina.Project.Rmd in HTML
-
 Due to the 9 million rows in calendar.csv, it was decided to treat this dataset outside of this analysis due to the size of it. 
 
 - calendar_df.Rmd - Code to treat calendar.csv and create the two datasets below to analyse in this report
@@ -43,7 +36,10 @@ library(plotly)
 library(forcats)
 library(crosstalk)
 library(here)
-library(camcorder)
+
+
+
+options(scipen = 999)
 ```
 
 ## Dataset 'calendar_df'
@@ -141,6 +137,7 @@ unique(calendar_df$month)
 head(calendar_df)
 ```
 
+
 ```{r  echo=FALSE}
 min(calendar_df$date)
 ```
@@ -175,21 +172,40 @@ calendar_df$adjusted_price <- strtoi(calendar_df$adjusted_price)
 ```
 
 ## Dropping JUne 2024
+The dataset starts on the 26th June 2024, so data for June 2024 was dropped (Because only 4 days in June).
 ```{r echo=FALSE}
-min(calendar_df$date)
+old_calendar_df_date <- min(calendar_df$date)
+print(old_calendar_df_date)
 ```
 
 ```{r echo=FALSE}
 calendar_df %>% 
-  select(listing_id, month, available, price) %>% 
+  # Dropping June 2024 because it will skew the analysis 
+  filter(available == TRUE & month != 'June 2024')
+```
+
+```{r echo=FALSE}
+calendar_df <- calendar_df %>% 
   # dropping June 2024 because it will skew the analysis 
-  filter( (available == TRUE) & (month == 'June 2024')) %>% 
-  group_by(listing_id,  month) %>% 
-  summarise(count=n(),
-            min_price = min(price),
-            mean_price = mean(price),
-            median_price = median(price),
-            max_price = max(price))
+  filter( (available == TRUE) & (month != 'June 2024')) 
+```
+
+
+```{r echo=FALSE}
+new_calendar_df_date <- min(calendar_df$date)
+print(old_calendar_df_date)
+print(new_calendar_df_date)
+
+```
+
+
+## Issues with Listings ID
+
+Issues with LISTINGS Id were identified. THe first 7 digits are the important ones. 
+
+```{r echo=FALSE}
+calendar_df <- calendar_df %>% 
+  mutate(listings = substr(listing_id, 1, 7))
 ```
 
 ## Dataset 'summarise_df'
@@ -210,6 +226,22 @@ summarise_df <- calendar_df %>%
 ```{r echo=FALSE, warning=FALSE}
 head(summarise_df)
 ```
+```{r echo=FALSE, warning=FALSE}
+# How many unique id?
+print('summarise_df - unique ids')
+print(n_distinct(summarise_df$listing_id))
+
+print('summarise_df - ROWS')
+print(nrow(summarise_df))
+```
+
+```{r echo=FALSE, warning=FALSE}
+#
+summarise_df %>%
+  filter(count >=32)
+
+
+```
 
 #### Data Dictionary
 | Field | Type  | Description |
@@ -221,17 +253,7 @@ head(summarise_df)
 | mean_price | integer | Mean price for that listing in that month |
 | max_price | integer | Maximum price for that listing in that month |
 
-## Saving the summarise_df as csv file
 
-```{r echo=FALSE, warning=FALSE}
-
-###################
-# Define the file path using here
-file_path <- here(DIRECTORY, "summarise_df.csv")
-# Save the dataframe as a CSV file
-write.csv(summarise_df, file = file_path)
-
-```
 
 In 'summarise_df' dataset, there are `r nrow(summarise_df)` rows and `r ncol(summarise_df)` columns in the dataset.
 Columns names are `r colnames(summarise_df)`.
@@ -241,29 +263,49 @@ A new dataset summarising the number of available nights for each listing in a y
 
 ```{r echo=FALSE, warning=FALSE}
 # Examining availability for each host
-calendar_df %>% 
-  select(listing_id, available) %>%
+available_nights_df <- calendar_df %>% 
   filter(available == TRUE) %>% 
   group_by(listing_id) %>% 
-  summarise(available_nights=n())
+  summarise(available_nights=n(),
+            min_price = min(price),
+            mean_price = mean(price),
+            median_price = median(price),
+            max_price = max(price))
+
+head(available_nights_df)
 
 ```
-
-```{r echo=FALSE}
-# creating a new dataframe of the table above
-available_nights_df <-  calendar_df %>% 
-  select(listing_id, available) %>%
-  filter( (available == TRUE) & ('month' != 'June 2024')) %>% 
-  group_by(listing_id) %>% 
-  summarise(available_nights=n())
-
+```{r echo=FALSE, warning=FALSE}
+# How many unique id?
+ 
+print(n_distinct(available_nights_df$listing_id))
+print(nrow(available_nights_df))
 ```
+
 
 #### Data Dictionary
 | Field | Type  | Description |
 |:-|:-|:-|
 | listing_id | integer | AirBnB's unique identifier for the listing |
-| available_nights | integer | Number of nights avaible during the year |
+| available_nights | integer | Number of nights available during the year |
+| min_price | integer | Minimum price per night |
+| mean_price | integer | Mean price per night |
+| median_price | integer | Median price per night |
+| max_price | integer | Max price per night |
+
+
+## Saving the summarise_df as csv file
+
+```{r echo=FALSE, warning=FALSE}
+
+###################
+# Define the file path using here
+file_path <- here(DIRECTORY, "summarise_df.csv")
+
+# Save the dataframe as a CSV file
+write.csv(summarise_df, file = file_path)
+
+```
 
 ## Saving the available_nights_df as csv file
 
@@ -272,6 +314,7 @@ available_nights_df <-  calendar_df %>%
 ###################
 # Define the file path using here
 file_path <- here(DIRECTORY, "available_nights_df.csv")
+
 # Save the dataframe as a CSV file
 write.csv(summarise_df, file = file_path)
 

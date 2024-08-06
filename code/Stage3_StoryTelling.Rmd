@@ -30,12 +30,14 @@ library(camcorder)
 
 
 DIRECTORY <- "data_2024"
+
 # specifying the path to the CSV file
-file_path <- here(DIRECTORY, "airbnb_final_df_20214.csv")
+# file_path <- here(DIRECTORY, "airbnb_final_df_20214.csv")
+
+file_path <- here(DIRECTORY, "airbnb_final_df_2024.csv")
 
 # Read the CSV file
 df <- read_csv(file_path)
-
 
 # changing 'month' to factor
 df$month_category <- as.factor(df$month_category)
@@ -54,6 +56,22 @@ df$month_category <- factor(df$month_category, levels = c("1 month",
                                                             "12 months",
                                                             "More than 12 months"
                                                             ))
+
+
+
+# dropping irrelevant columns
+df <- df %>%
+  select(-c(number_of_reviews,last_review, reviews_per_month,calculated_host_listings_count,
+            number_of_reviews_ltm,license,minimum_nights))
+
+
+
+# changing 'best_choice_airbnb_or_rent_per_year' to factor
+df$best_choice_airbnb_or_rent_per_year <- as.factor(df$best_choice_airbnb_or_rent_per_year)
+# changing  the order of factors
+df$best_choice_airbnb_or_rent_per_year <- factor(df$best_choice_airbnb_or_rent_per_year, levels = c("AirBnB", 
+                                                            "Rent"))
+
 
 # specifying the path to the CSV file
 file_path <- here(DIRECTORY, "airbnb_large_df_2024.csv")
@@ -86,10 +104,31 @@ large_df$month <- factor(large_df$month, levels = c("August 2024",
 df %>%
   select(id, county,room_type, availability_365, price, airbnb_potential_annual_income, #rent_price_per_month, 
          rent_potential_annual_income, best_choice_airbnb_or_rent_per_year,annual_diff_rent_minus_Airbnb) 
-     
-     
-     
 ```
+
+
+```{r echo=FALSE}
+######
+#Occupancy, potential annual incomr from airbnb, differnece and best choice
+###
+
+df <- df %>%
+  mutate( 
+    
+        # assuming that 70% of avaiable nights would be occupied
+        occupancy_70 = round(availability_365 *0.7),
+        
+        # potential annual income based on 70% occupancy rate
+        airbnb_potential_annual_income = occupancy_70 * price,
+        
+        # If POSITIVE, then AIRBNB brings more income
+        # If NEGATIVE, then RENT brings more income
+        annual_diff_rent_minus_Airbnb = airbnb_potential_annual_income - rent_potential_annual_income,
+        
+        best_choice_airbnb_or_rent_per_year = if_else(airbnb_potential_annual_income >= rent_potential_annual_income, 'AirBnB', 'Rent'))
+
+```
+
 
 ```{r echo=FALSE}
 # assigning colors to specific variable 
@@ -220,17 +259,11 @@ g <- list(
 
 
 unique_id_df <- df %>%
-  group_by(id, rent_pressure_zone, lea, council, room_type, latitude, longitude) %>%
+  group_by(id, lea, rent_pressure_zone,council, room_type, latitude, longitude) %>%
   summarise(price = mean(price))
 
 fig <- plot_geo(df, lat = ~latitude, lon = ~longitude, color = ~rent_pressure_zone)
-fig <- fig %>% add_markers(marker = list(opacity = 0.2), showlegend=FALSE, colors = pressure_colors,
-                          
-                          hovertemplate = ~paste("LEA:", lea, "<br>", 
-                                        "Council:", council, "<br>",
-                                        "Price (in €):", price, "<br>",
-                                        "Room Type", room_type, "<br>",
-                                        "RTZ", rent_pressure_zone, "<br>"))
+fig <- fig %>% add_markers(marker = list(opacity = 0.2), showlegend=FALSE, colors = pressure_colors)
 fig <- fig %>% layout(
     title = 'Which AirBnB listings are in the RTZs?', geo = g)
 
@@ -243,17 +276,14 @@ fig
 ```{r message=FALSE, echo=FALSE}
 # creating a dataframe with rent_pressure_zone and room_type, arranging by count
 df %>% 
-  select(rent_pressure_zone, room_type, price, minimum_nights) %>% 
+  select(rent_pressure_zone, room_type, price) %>% 
   group_by(room_type, rent_pressure_zone) %>% 
   summarise(count = n(),
-            min_price = min(price), 
-            median_price = median(price), 
-            mean_price = mean(price),
-            max_price = max(price),
-            min_nights = min(minimum_nights), 
-            median_min_nights = median(minimum_nights),
-            mean_min_nights = mean(minimum_nights),
-            max_min_nights = max(minimum_nights)) 
+            
+            mean_price = mean(price, na.rm = TRUE),
+            max_price = max(price, na.rm = TRUE)) 
+
+summary(df$price)
 ```
 
 ```{r echo=FALSE, warning=FALSE}
@@ -413,32 +443,48 @@ rpz_df %>%
 ```
 
 ```{r message=FALSE, echo=FALSE}
-rpz_df %>%
+# Summarize the data
+summary_best_choice_airbnb_or_rent_per_year <- rpz_df %>%
   group_by(best_choice_airbnb_or_rent_per_year) %>%
-    summarise(n = n_distinct(id)) %>%
-  plot_ly(labels = ~best_choice_airbnb_or_rent_per_year, values = ~n, type = 'pie',
-          textinfo = 'label+percent',
-          hoverinfo = 'label+value',
-          hole = 0.5,
-          marker = list(colors = rent_colors)) %>%
-  layout(title = list(text = '<b><span style="color:#F58518;">Over 4,400 </span> landlords would earn <span style="color:#F58518;">more income</span>\n by <span style="color:#F58518;">Long-Term Leasing</span> than Airbnb in RPZs.</b>',
-                      x = 0.5),
+  summarise(n = n_distinct(id)) 
 
-         
-         
-        legend = list(
-        orientation = "h",
-        y = -0.1,
-        x = 0.5,
-        xanchor = "center",
-        yanchor = "bottom"
+# Calculate the maximum value rounded to the nearest hundred
+summary_best_choice_airbnb_or_rent_per_year_max <- round(max(summary_best_choice_airbnb_or_rent_per_year$n), -2)
+
+# Create the pie chart
+fig <- summary_best_choice_airbnb_or_rent_per_year %>%
+  plot_ly(
+    labels = ~best_choice_airbnb_or_rent_per_year, 
+    values = ~n, 
+    type = 'pie',
+    textinfo = 'label+percent',
+    hoverinfo = 'label+value',
+    hole = 0.5,
+    marker = list(colors = rent_colors)
+  ) %>%
+  layout(
+    title = list(
+      text = paste('<b><span style="color:#F58518;">Nearly', summary_best_choice_airbnb_or_rent_per_year_max, 
+                   '</span> landlords would earn <span style="color:#F58518;">more income</span>\n by <span style="color:#F58518;">Long-Term Leasing</span> than Airbnb (70% occupancy) in RPZs.</b>'),
+      x = 0.5
+    ),
+    legend = list(
+      orientation = "h",
+      y = -0.1,
+      x = 0.5,
+      xanchor = "center",
+      yanchor = "bottom"
     ),
     margin = list(
-        l = 50,  # left margin
-        r = 50,  # right margin
-        t = 100, # top margin
-        b = 50   # bottom margin
-    ))
+      l = 50,  # left margin
+      r = 50,  # right margin
+      t = 100, # top margin
+      b = 50   # bottom margin
+    )
+  )
+
+# Print the plot
+fig
 
 ```
 
@@ -464,7 +510,21 @@ private <-  rpz_df %>%
 
 private_rpz_count <- private %>%
   group_by(best_choice_airbnb_or_rent_per_year) %>%
-  summarise(n = n_distinct(id))
+  summarise(n = n_distinct(id)) 
+
+
+# changing 'best_choice_airbnb_or_rent_per_year' to factor
+private_rpz_count$best_choice_airbnb_or_rent_per_year <- as.factor(private_rpz_count$best_choice_airbnb_or_rent_per_year)
+# changing  the order of factors
+private_rpz_count$best_choice_airbnb_or_rent_per_year <- factor(private_rpz_count$best_choice_airbnb_or_rent_per_year, levels = c("AirBnB", 
+                                                            "Rent"))
+
+# changing 'best_choice_airbnb_or_rent_per_year' to factor
+entire_rpz_count$best_choice_airbnb_or_rent_per_year <- as.factor(entire_rpz_count$best_choice_airbnb_or_rent_per_year)
+# changing  the order of factors
+entire_rpz_count$best_choice_airbnb_or_rent_per_year <- factor(entire_rpz_count$best_choice_airbnb_or_rent_per_year, levels = c("AirBnB", 
+                                                            "Rent"))
+
 
 #######################
 # annual_diff_rent_minus_Airbnb
@@ -484,29 +544,36 @@ private_room_rpz_more_income_rent <-  private %>%
 
 
 
-
 ```
 
+
 ```{r echo=FALSE}
-
-
 fig <- plot_ly()
 fig <- fig %>% add_pie(data = entire_rpz_count, labels = ~best_choice_airbnb_or_rent_per_year, values = ~n,
+                                             #direction = 'counterclockwise',
+                      direction = 'counterclockwise',
                       name = "Entire Unit", 
                       textinfo = 'label+percent+name',
                       hoverinfo = 'label+value+name',
                       marker = list(colors = rent_colors),
                       hole = 0.45,
+
                       domain = list(row = 0, column = 0))
 
 fig <- fig %>% add_pie( data = private_rpz_count, labels = ~best_choice_airbnb_or_rent_per_year, values = ~n,
+                                              #direction = 'counterclockwise',
+                      direction = 'counterclockwise',
                       name = "Private Room", 
                       textinfo = 'label+percent+name',
                       hoverinfo = 'label+value+name',
                       marker = list(colors = rent_colors),
-                      hole = 0.45, domain = list(row = 0, column = 1))
+                      hole = 0.45, 
+                      
 
-fig <- fig %>% layout(title = '<b><span style="color:#F58518;">Over One-Third Entire Units and Private Rooms</span>\nwould potentially bring more income by <span style="color:#F58518;">Long-Term Leasing</span> than Airbnb in RPZs.</b>',
+                      
+                      domain = list(row = 0, column = 1))
+
+fig <- fig %>% layout(title = '<b><span style="color:#F58518;">More than half</span> of Entire Units and Private Rooms\nwould potentially bring more income by <span style="color:#F58518;">Long-Term Leasing</span> than Airbnb in RPZs.</b>',
               showlegend = F,
               grid=list(rows=1, columns=2),
               xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
@@ -536,10 +603,13 @@ fig
 ```
 
 
+
+
+
 ```{r repeating_functions, echo=FALSE}
 
 
-counties_with_most_income_from_leasing <- function(table) { 
+counties_with_most_income_from_leasing <- function(table, room_type_var) { 
   rpz_more_income_rent_county <- table %>%
     group_by(county) %>%
     summarise(n_id = n_distinct(id)) %>%
@@ -568,7 +638,7 @@ counties_with_most_income_from_leasing <- function(table) {
       yaxis = list(title = FALSE, categoryorder = "total ascending"),  # Order y-axis by n_id
       xaxis = list(title = "# of AirBnB listings"),
       title = list(
-        text = paste('<b>Based on Potential Annual Income,\nnearly',  county_max_nid , 'Entire Units would bring more income\nby <span style="color:#F58518;">Long-Term Leasing</span> in' , county_max, '</b>'),
+        text = paste('<b>Based on Potential Annual Income,\nnearly',  county_max_nid , room_type_var, 'would bring more income\nby <span style="color:#F58518;">Long-Term Leasing</span> in' , county_max, '</b>'),
         x = 0.5,
         y = 0.95,
         xanchor = 'center',
@@ -650,17 +720,12 @@ crosstable_function <- function(table) {
 }
 
 
-
-
-
-
-
 ```
 
 
 
 ```{r warning=FALSE, echo=FALSE}
-counties_with_most_income_from_leasing(entire_rpz_more_income_rent)
+counties_with_most_income_from_leasing(entire_rpz_more_income_rent, 'Entire Units' )
 
 
 ```
@@ -676,32 +741,14 @@ crosstable_function(entire_rpz_more_income_rent_month_category_county_table)
 
 
 
-```{r}
-entire_rpz_more_income_rent %>%
-  plot_ly(x = ~month_category, y = ~annual_diff_rent_minus_Airbnb) %>%
-  add_boxplot(marker = list(opacity = 0.2), showlegend = FALSE, colors = '#565656') %>% 
-  layout(
-    xaxis = list(title = FALSE),
-    yaxis = list(title = "Difference between Airbnb and Long-Term Leasing"#,
-         # zerolinecolor = '#ffff',
-         # zerolinewidth = 2,
-         # gridcolor = 'ffff',
-         # range = list(0, 450)
-         ), 
-         title = list(text = '<b>Landlords <span style="color:#565656;">Airbnb</span> short number of months make less money than those who Long-Term Lease</b> Earnings',
-                      x = 0.5),
-    boxmode = "group") 
-   
-```
+
 
 
 
 
 ```{r echo=FALSE}
-counties_with_most_income_from_leasing(private_room_rpz_more_income_rent)
+counties_with_most_income_from_leasing(private_room_rpz_more_income_rent, 'Private Rooms' )
 
-
-   
 ```
 
 ```{r warning=FALSE, echo=FALSE}
@@ -713,33 +760,13 @@ crosstable_function(private_room_rpz_more_income_rent_month_category_county_tabl
 
 ```
 
-```{r warning=FALSE, echo=FALSE}
-private_room_rpz_more_income_rent %>%
-  plot_ly(x = ~month_category, y = ~annual_diff_rent_minus_Airbnb) %>%
-  add_boxplot(marker = list(opacity = 0.2), showlegend = FALSE, colors = '#565656') %>% 
-  layout(
-    xaxis = list(title = FALSE),
-    yaxis = list(title = "Difference between Airbnb and Long-Term Leasing"#,
-         # zerolinecolor = '#ffff',
-         # zerolinewidth = 2,
-         # gridcolor = 'ffff',
-         # range = list(0, 450)
-         ), 
-         title = list(text = '<b>Landlords <span style="color:#565656;">Airbnb</span> short number of months make less money than those who Long-Term Lease</b> Earnings',
-                      x = 0.5),
-    boxmode = "group") 
-   
-```
-
-
-
 # Appendix
 
 
 ### Final Dataset
 In the final 'df' dataset, there are `r nrow(df) ` rows and `r ncol(df)` columns. Columns names are  `r colnames(df)`. 
 
-Because our dataset was has been merged with 'available_nights_df', as described above, our dataset has AirBnB listings only available from 23rd October 2021 to 21st October 2022. Any past AirBnB are not included in our dataset. 
+Because our dataset was has been merged with 'available_nights_df', as described above, our dataset has AirBnB listings only available from 1st July 2024 to 25th July 2025. Any past AirBnB are not included in our dataset. 
 
 ```{r echo=FALSE}
 summary(df)
@@ -789,3 +816,25 @@ fig <- fig %>% layout(
 fig
 ```
 
+
+```{r}
+entire_rpz_more_income_rent %>%
+  plot_ly(x = ~month_category, y = ~annual_diff_rent_minus_Airbnb) %>%
+  add_boxplot(marker = list(opacity = 0.2), showlegend = FALSE, colors = '#565656') %>% 
+  layout(
+    xaxis = list(title = FALSE),
+    yaxis = list(title = "Difference between Airbnb and Long-Term Leasing"#,
+         # zerolinecolor = '#ffff',
+         # zerolinewidth = 2,
+         # gridcolor = 'ffff',
+         # range = list(0, 450)
+         ), 
+         title = list(text = '<b>Landlords <span style="color:#565656;">Airbnb</span> short number of months make less money than those who Long-Term Lease</b> Earnings',
+                      x = 0.5),
+    boxmode = "group") 
+   
+```
+
+```{r}
+
+```
