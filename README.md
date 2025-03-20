@@ -40,7 +40,7 @@ There have been talks of the Irish government to "bring legislation to create ne
 
 ## [Analyzing the Influence of Airbnb on Irish Property Prices Report](https://public.tableau.com/app/profile/karina.jonina/viz/To-Rent-or-Not-To-Rent/Dashboard)
 
-<img src='https://github.com/kjonina/Analyzing-the-Influence-of-Airbnb-on-Irish-Property-Prices/blob/main/screenshots/animation.gif'/></a>
+<img src='https://github.com/kjonina/icons/To-Airbnb-Tableau.png'/></a>
 
 
 ## Data Sources
