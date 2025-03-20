@@ -40,7 +40,7 @@ There have been talks of the Irish government to "bring legislation to create ne
 
 ## [To Airbnb or Not To Airbnb Report](https://public.tableau.com/app/profile/karina.jonina/viz/To-Rent-or-Not-To-Rent/Dashboard)
 
-<img src='https://github.com/kjonina/icons/To-Airbnb-Tableau.png'/></a>
+<img src='https://github.com/kjonina/kjonina/blob/master/icons/To-Airbnb-Tableau.png'/></a>
 
 
 ## Data Sources
