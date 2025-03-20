@@ -38,7 +38,7 @@ There have been talks of the Irish government to "bring legislation to create ne
 - Entire Rental Unit – this could be a house or an apartment.  For this report, entire rental units will be viewed as a possible long-term accommodation for a family.
 - Private Room – this is a private room in a shared house.  This type of accommodation is usually used by students for the academic months of the year or young professionals (all year around).
 
-## [Analyzing the Influence of Airbnb on Irish Property Prices Report](https://public.tableau.com/app/profile/karina.jonina/viz/To-Rent-or-Not-To-Rent/Dashboard)
+## [To Airbnb or Not To Airbnb Report](https://public.tableau.com/app/profile/karina.jonina/viz/To-Rent-or-Not-To-Rent/Dashboard)
 
 <img src='https://github.com/kjonina/icons/To-Airbnb-Tableau.png'/></a>
 
