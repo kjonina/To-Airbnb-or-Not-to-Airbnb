@@ -38,10 +38,14 @@ There have been talks of the Irish government to "bring legislation to create ne
 - Entire Rental Unit – this could be a house or an apartment.  For this report, entire rental units will be viewed as a possible long-term accommodation for a family.
 - Private Room – this is a private room in a shared house.  This type of accommodation is usually used by students for the academic months of the year or young professionals (all year around).
 
+## [Analyzing the Influence of Airbnb on Irish Property Prices Report](https://public.tableau.com/app/profile/karina.jonina/viz/To-Rent-or-Not-To-Rent/Dashboard)
+
+<img src='https://github.com/kjonina/Analyzing-the-Influence-of-Airbnb-on-Irish-Property-Prices/blob/main/screenshots/animation.gif'/></a>
+
 
 ## Data Sources
 
-Lyons, R. (2021) *Irish Rental Report Q1 2024.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 28th June 2024).
+Lyons, R. (2024) *Irish Rental Report Q1 2024.* Available at: https://ww1.daft.ie/report/ronan-lyons-2021q2-daftrentalprice?d_rd=1 (Accessed: 28th June 2024).
 
 Residential Tenancies Board (2021) *What are Rent Pressure Zones (RPZ)?* Available at: https://www.rtb.ie/registration-and-compliance/setting-and-reviewing-rent/guide-to-rent-pressure-zones (Accessed: 31 July 2024).
 
